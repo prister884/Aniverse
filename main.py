@@ -91,6 +91,8 @@ async def start(message: types.Message):
             "redeemed":[],
             "referral_count":0,
             "referral_link": person_link,
+            "ref_spins": 0,
+            "ref_redeemed": False,
             "player_status": 0,  # Indicates the number of days the Aniverse Pass is valid for
             "arena_notif": False,
             "spin_notif": False,
@@ -609,10 +611,23 @@ async def process_callback(callback_query: types.CallbackQuery):
         
         # Fetch user data
         user_data = db.users.find_one({"user_id": user_id})
-        
+        referral_count = user_data.get("referral_count", 0)
+        ref_spins = user_data.get("ref_spins", 0)
+        referral_link = user_data.get("referral_link", 0)
         nickname = user_data.get("nickname", "Гость")
         
-        await callback_query.message.answer(f"🔗 [{nickname}](tg://user?id={user_id}), приводи друзей в игру по своей ссылке и получай за это приятные бонусы")
+        await callback_query.message.answer(
+            f"🔗 [{nickname}](tg://user?id={user_id}), приводи друзей в игру по своей ссылке и получай за это приятные бонусы \n\n"
+            f"🌅 За каждых трёх приведённых друзей ты получишь 1 попытку \n\n"
+            f"🍙 Привёл игроков: {referral_count}\n"
+            f"🪄 Получил попыток: {ref_spins}\n"
+            f"⌛️ До обновления: ✅\n"
+            f"🤝 Твоя ссылка: `{referral_link}` \n\n"
+            f"📬 Такой возможностью можно воспользоваться не больше одного раза в сутки",
+            parse_mode = "Markdown"
+        )
+        
+        
     elif action == "change_universe":
         await callback_query.answer("Вы выбрали Сменить вселенную. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "spin_bonuses":
