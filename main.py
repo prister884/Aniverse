@@ -48,6 +48,8 @@ def get_welcome_buttons():
 async def start(message: types.Message):
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
+    person_link = f"https://t.me/aniverseclonedonbot?start={user_id}"
+
 
     # Check if the user exists in MongoDB
     user_data = db.users.find_one({"user_id": user_id})
@@ -80,7 +82,15 @@ async def start(message: types.Message):
             "cards": [],
             "seasonal_points": 0,
             "spin_chances": 1,
+            "spins":0,
+            "осколки":0,
+            "обычные":0,
+            "редкие":0,
+            "эпические":0,
             "coins": 0,
+            "redeemed":[],
+            "referral_count":0,
+            "referral_link": person_link,
             "player_status": 0,  # Indicates the number of days the Aniverse Pass is valid for
             "arena_notif": False,
             "spin_notif": False,
@@ -121,27 +131,149 @@ async def leave_account(message: types.Message):
     )
 
 
+@dp.callback_query_handler(lambda c: c.data.startswith("back_to_"))
+async def back_to(callback_query: types.CallbackQuery):
+    """
+    Handle the "back" button for various screens.
+    The function dynamically checks the callback data and navigates to the appropriate screen.
+    """
+    # Acknowledge the callback to prevent the Telegram "waiting" state
+    await callback_query.answer()
 
-@dp.callback_query_handler(lambda c: c.data == "back_to_welcome")
-async def back_to_welcome(callback_query: types.CallbackQuery):
-    """
-    Handle the "back" button that takes the user back to the welcome screen.
-    """
-    user_id = callback_query.from_user.id
+    # Extract the type of the back action from the callback data
+    back_type = callback_query.data.split("_", 2)[2]  # Extract the part after "back_to_"
+
+    if back_type == "welcome":
+        # Handle back to welcome screen
+        user_id = callback_query.from_user.id
+        user_data = db.users.find_one({"user_id": user_id})
+        if not user_data:
+            await callback_query.answer("❌ Пожалуйста, сначала введите команду /start.")
+            return
+
+        await callback_query.message.edit_text(
+            "👋 Добро пожаловать в Aniverse card! Для начала выбери вселенную.",
+            reply_markup=get_welcome_buttons(),
+            parse_mode="Markdown",
+            disable_web_page_preview=True
+        )
+
+    elif back_type == "aniverse":
+        # Handle back to Aniverse screen (you can add logic specific to this screen)
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton(text="🔑 Купить Aniverse pass", callback_data="payment_page_aniverse_pass")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
+        )
+
+        await callback_query.message.edit_text(
+            f"🔓 Что даст тебе Aniverse pass? \n\n"
+            f"⛺️ Возможность создать свой собственный клан \n"
+            f"⌛️ Возможность получать карточки каждые 3 часа вместо 4 \n"
+            f"🏟 Возможность сражаться на арене каждый час вместо 2 \n"
+            f"🕒 Уведомления об окончании времени ожидания карт и арены \n"
+            f"👾 Уведомления об окончании времени сражения с боссом \n"
+            f"🃏 Повышенная вероятность выпадения легендарных, эпических и мифических карт \n"
+            f"👤 Возможность использовать смайлики в никнейме \n"
+            f"🥡 Получишь +3 крутки \n"
+            f"🗓️ Срок действия 30 дней \n \n"
+            f"🔑 Aniverse pass - 159 рублей ",
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+
+    elif back_type == "menu":
+        # Handle back to menu screen
+        user_id = callback_query.from_user.id
+        user_data = db.users.find_one({"user_id": user_id})
+        nickname = user_data.get("nickname", "Гость")
+        spin_chances = user_data.get("spin_chances", 0)
+        universe = user_data.get("universe", "Не выбрана")
+        seasonal_points = user_data.get("seasonal_points", 0)
+        register_date = user_data.get("register_date")
+        player_status = user_data.get("player_status")
+        coins = user_data.get("coins")
+        maximum = user_data.get("maximum_cards")
+        cards = user_data.get("cards", [])
+
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(
+            InlineKeyboardButton(text="🔑 Pass", callback_data="pass"),
+            InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="🔮 Магазин", callback_data="shop"),
+            InlineKeyboardButton(text="♻️ Крафт", callback_data="craft")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="⛺️ Кланы", callback_data="clans"),
+            InlineKeyboardButton(text="🏟 Арена", callback_data="arena")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="🌙 Задания", callback_data="tasks"),
+            InlineKeyboardButton(text="🔗 Рефералка", callback_data="referral")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="🗺️ Сменить вселенную", callback_data="change_universe")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="🎁 Бонусы за Крутки", callback_data="spin_bonuses")
+        )
+
+        universe_cut = universe.split(" ", 1)[1]
+
+        await callback_query.message.edit_text(
+            f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
+            f"🗺️ Вселенная: {universe_cut} \n"
+            f"🃏 Всего карт: {len(cards)} из {maximum}\n"
+            f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
+            f"💰 Коины: {coins} 🪙", 
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+
+    elif back_type == "paymentaniverse":
+        
+        # Acknowledge the callback
+        await callback_query.answer()
+        
+        keys = InlineKeyboardMarkup(row_width=2)
+
+        keys.add(
+                InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_aniverse_pass"),
+                InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment_completed")
+        )
+        
+        keys.add(
+                InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_aniverse_pass")  
+        )
+        
+        keys.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_aniverse")
+        )
     
-    # Check if the user exists in the database
-    user_data = db.users.find_one({"user_id": user_id})
-    if not user_data:
-        await callback_query.answer("❌ Пожалуйста, сначала введите команду /start.")
-        return
+        await callback_query.message.edit_text(
+            f"🧾 Покупка Aniverse pass\n"
+            f"💵 Стоимость: 159 рублей \n"
+            f"➖➖➖➖➖➖\n"
+            f"‼️ `После оплаты нажми кнопку \"я оплатил\"`.\n\n"
+            f"💬 `Возникли сложности с донатом? Пиши сюда - @donshirley` \n"
+            f"➖➖➖➖➖➖\n"
+            f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)",
+            parse_mode="Markdown",
+            reply_markup=keys,
+            disable_web_page_preview=True
+        )
 
-    # Send a message to navigate back to the welcome screen
-    await callback_query.message.edit_text(
-        "👋 Добро пожаловать в Aniverse card! Для начала выбери вселенную.",
-        reply_markup=get_welcome_buttons(),  # Show the welcome buttons again
-        parse_mode="Markdown",
-        disable_web_page_preview=True
-    )
+
+    else:
+        # Handle other back actions here, if any
+        await callback_query.message.edit_text(
+            "❌ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.",
+            parse_mode="Markdown"
+        )
     
     # Acknowledge the callback to ensure the transition is visible to the user
     await callback_query.answer()
@@ -310,15 +442,28 @@ async def handle_menu(message: types.Message):
 
     if "получить карту" in user_input:
         # Handle "Получить карту"
-        await message.answer("✨ Вы нажали на \"`Получить карту`\". Функционал скоро будет добавлен.")
+        await message.answer("✨ Вы нажали на \"`Получить карту`\". Функционал скоро будет добавлен.", parse_mode="Markdown")
     
     elif "мои карты" in user_input:
+        
+        keyboard_cards = InlineKeyboardMarkup(row_width=1)
+    
+        keyboard_cards.add(
+            InlineKeyboardButton(text="⚡️Обычные", callback_data="show_casual"),
+            InlineKeyboardButton(text="✨ Редкие", callback_data="show_rare"),
+            InlineKeyboardButton(text="🐉 Эпические", callback_data="show_epic"),
+            InlineKeyboardButton(text="🩸 Легендарные", callback_data="show_legendary"),
+            InlineKeyboardButton(text="🧩 Мифические", callback_data="show_mythic"),
+            InlineKeyboardButton(text="⚛️ Все карты", callback_data="show_all"),
+            InlineKeyboardButton(text="🪬 LIMITED", callback_data="show_limited"),
+        )
+         
         # Handle "Мои карты"
-        if not cards:
-            await message.answer("🃏 У вас ещё нет карт. Нажмите \"`Получить карту`\", чтобы начать коллекцию.")
-        else:
-            card_list = "\n".join([f"- {card['name']} ({card['rarity']})" for card in cards])
-            await message.answer(f"📜 Ваши карты:\n{card_list}")
+        await message.answer(
+            f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
+            reply_markup=keyboard_cards, 
+            parse_mode="Markdown"
+        )
 
     elif "меню" in user_input:
         # Handle "Меню"
@@ -383,7 +528,7 @@ async def handle_menu(message: types.Message):
             f"🗓 Регистрация: {register_date} \n \n"
             f"📝 Помощь \n"
             f"➢ Изменить ник можно командой \n"
-            f"`Сменить ник [ник]`\n"            
+            f"\"`Сменить ник [ник]`\"\n"            
             f"➢ Отключить уведомления можно командой \n"
             f"`Отключить уведомления [карты/арена/босс]`\n"            
             f"➢ Включить уведомления можно командой \n"
@@ -401,7 +546,7 @@ async def handle_menu(message: types.Message):
             f"🥡 Количество круток: {spin_chances} \n"
             f"🗓 Регистрация: {register_date} \n \n"
             f"📝 Помощь \n ➢ Изменить ник можно командой \n"
-            f"`Сменить ник [ник]`",
+            f"\"`Сменить ник [ник]`\"",
             parse_mode="Markdown"  
             
             )
@@ -416,249 +561,274 @@ async def process_callback(callback_query: types.CallbackQuery):
     action = callback_query.data
 
     if action == "pass":
-        await callback_query.answer("Вы выбрали Pass.")
-    elif action == "rating":
-        await callback_query.answer("Вы выбрали Рейтинг.")
-    elif action == "shop":
-        await callback_query.answer("Вы выбрали Магазин.")
-    elif action == "craft":
-        await callback_query.answer("Вы выбрали Крафт.")
-    elif action == "arena":
-        await callback_query.answer("Вы выбрали Арена.")
-    elif action == "clans":
-        await callback_query.answer("Вы выбрали Кланы.")
-    elif action == "tasks":
-        await callback_query.answer("Вы выбрали Задания.")
-    elif action == "referral":
-        await callback_query.answer("Вы выбрали Рефералка.")
-    elif action == "change_universe":
-        
-        # Handle changing the universe with pagination
-        user_id = callback_query.from_user.id
-        # Get user data from MongoDB
-        user_data = db.users.find_one({"user_id": user_id})
+        # Acknowledge the callback
+        await callback_query.answer()
 
-        if not user_data:
-            await callback_query.answer("Пользователь не найден в базе данных.")
-            return
-
-        await callback_query.message.edit_text(
-            f"🌌 Выберите вселенную из списка ниже:",
-            reply_markup=get_universe_keyboard_change(page=1)
+        # Create the keyboard with the payment link button
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(
+            InlineKeyboardButton(text="🔑 Купить Aniverse pass", callback_data = "payment_page_aniverse_aniverse_pass")
+        )
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
         )
 
+        # Send the message with the button
+        await callback_query.message.edit_text(
+            f"🔓 Что даст тебе Aniverse pass? \n\n"
+            f"⛺️ Возможность создать свой собственный клан \n"
+            f"⌛️ Возможность получать карточки каждые 3 часа вместо 4 \n"
+            f"🏟 Возможность сражаться на арене каждый час вместо 2 \n"
+            f"🕒 Уведомления об окончании времени ожидания карт и арены \n"
+            f"👾 Уведомления об окончании времени сражения с боссом \n"
+            f"🃏 Повышенная вероятность выпадения легендарных, эпических и мифических карт \n"
+            f"👤 Возможность использовать смайлики в никнейме \n"
+            f"🥡 Получишь +3 крутки \n"
+            f"🗓️ Срок действия 30 дней \n \n"
+            f"🔑 Aniverse pass - 159 рублей ",
+            
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+         
+    elif action == "rating":
+        await callback_query.answer("Вы выбрали Рейтинг. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "shop":
+        await callback_query.answer("Вы выбрали Магазин. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "craft":
+        await callback_query.answer("Вы выбрали Крафт. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "arena":
+        await callback_query.answer("Вы выбрали Арена. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "clans":
+        await callback_query.answer("Вы выбрали Кланы. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "tasks":
+        await callback_query.answer("Вы выбрали Задания. Этот режим в процессе разработки. Вернитесь позже :(")
+    elif action == "referral":
+        
+        user_id = callback_query.from_user.id
+        
+        # Fetch user data
+        user_data = db.users.find_one({"user_id": user_id})
+        
+        nickname = user_data.get("nickname", "Гость")
+        
+        await callback_query.message.answer(f"🔗 [{nickname}](tg://user?id={user_id}), приводи друзей в игру по своей ссылке и получай за это приятные бонусы")
+    elif action == "change_universe":
+        await callback_query.answer("Вы выбрали Сменить вселенную. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "spin_bonuses":
-        await callback_query.answer("Вы выбрали Бонусы за Крутки.")
+        # Handle spin bonuses
+        user_id = callback_query.from_user.id
 
-def get_universe_keyboard_change(page=1):
+        # Fetch user data
+        user_data = db.users.find_one({"user_id": user_id})
+        if not user_data:
+            await callback_query.answer("❌ Пользователь не найден.")
+            return
+
+        total_spins = user_data.get("spins", 0)
+
+        # Define the thresholds and rewards
+        thresholds = [
+            {"threshold": 10, "reward_spins": 5, "reward_осколки": 0},
+            {"threshold": 50, "reward_spins": 10, "reward_осколки": 0},
+            {"threshold": 100, "reward_spins": 15, "reward_осколки": 0},
+            {"threshold": 350, "reward_spins": 20, "reward_осколки": 50},
+            {"threshold": 500, "reward_spins": 50, "reward_осколки": 300},
+            {"threshold": 1000, "reward_spins": 100, "reward_осколки": 1000},
+            {"threshold": 5000, "reward_spins": 300, "reward_осколки": 5000},
+        ]
+
+        # Build the message
+        rewards_message = f"💖 {user_data.get('nickname', 'гость')}, получай карты и получай за это награды.\n\n"
+
+        for entry in thresholds:
+            threshold = entry["threshold"]
+            reward_spins = entry["reward_spins"]
+            reward_осколки = entry["reward_осколки"]
+
+            if total_spins >= threshold:
+                rewards_message += f"✅ Получено {total_spins} из {threshold}\n"
+            else:
+                rewards_message += f"❌ Получено {total_spins} из {threshold}\n"
+
+            rewards_message += f"🫀 Награда: {reward_spins} 🃏"
+            if reward_осколки > 0:
+                rewards_message += f" + {reward_осколки} 🀄️"
+            rewards_message += "\n\n"
+
+        # Send the message
+        await callback_query.message.edit_text(
+            rewards_message,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(row_width=1).add(
+                InlineKeyboardButton("🎁 Забрать награду", callback_data="claim_spins"),
+                InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu")
+            )
+        )
+        
+
+@dp.callback_query_handler(lambda c: c.data.startswith("claim_spins"))
+async def claim_spins(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+
+    # Fetch user data
+    user_data = db.users.find_one({"user_id": user_id})
+    if not user_data:
+        await callback_query.answer("❌ Пользователь не найден.")
+        return
+
+    # Get user details with default values to avoid KeyError
+    nickname = user_data.get("nickname", "Гость")
+    total_spins = user_data.get("spins", 0)
+    spins = user_data.get("spin_chances", 0)
+    осколки = user_data.get("осколки", 0)
+    redeemed = user_data.get("redeemed", [])  # Initialize as an empty list if None
+
+    # Define the thresholds and rewards
+    thresholds = [
+        {"threshold": 10, "reward_spins": 5, "reward_осколки": 0},
+        {"threshold": 50, "reward_spins": 10, "reward_осколки": 0},
+        {"threshold": 100, "reward_spins": 15, "reward_осколки": 0},
+        {"threshold": 350, "reward_spins": 20, "reward_осколки": 50},
+        {"threshold": 500, "reward_spins": 50, "reward_осколки": 300},
+        {"threshold": 1000, "reward_spins": 100, "reward_осколки": 1000},
+        {"threshold": 5000, "reward_spins": 300, "reward_осколки": 5000},
+    ]
+
+    # Iterate through thresholds to check eligibility
+    for entry in thresholds:
+        threshold = entry["threshold"]
+        reward_spins = entry["reward_spins"]
+        reward_осколки = entry["reward_осколки"]
+
+        if total_spins >= threshold and threshold not in redeemed:
+            # Mark threshold as redeemed
+            redeemed.append(threshold)
+            
+            # Update user data in the database
+            db.users.update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {
+                        "осколки": осколки + reward_осколки,
+                        "spin_chances": spins + reward_spins,
+                        "redeemed": redeemed,
+                    }
+                },
+            )
+
+            # Send success message
+            message = (
+                f"🧸 {nickname}, ты успешно выполнил задание. Тебе начислено:\n"
+                f"➖➖➖➖➖➖\n"
+                f"{reward_spins} 🃏 круток"
+                if reward_осколки == 0
+                else f"🧸 {nickname}, ты успешно выполнил задание. Тебе начислено:\n"
+                f"➖➖➖➖➖➖\n"
+                f"{reward_spins} 🃏 круток и {reward_осколки} 🀄️ осколков"
+            )
+            await callback_query.message.answer(message)
+            
+
+        elif total_spins >= threshold and threshold in redeemed:
+            # Reward already claimed
+            await callback_query.answer(f"⭐️ {nickname}, ты уже получил награду за выполненные задания.")
+            
+
+    # If no rewards available
+    await callback_query.answer(f"❌ {nickname}, у тебя недостаточно круток, чтобы получить награду.")
+
+        
+@dp.callback_query_handler(lambda c: c.data.startswith("payment_page_"))
+async def payment_page_aniverse(callback_query: types.CallbackQuery):
     """
-    Generate a paginated inline keyboard for universes from MongoDB.
+    Handle the payment page for the user.
+    The type of purchase and its price will be dynamically fetched from the database based on callback data.
     """
-    universes = db.universes.find()  # Fetch universes from MongoDB
-    items_per_page = 7
-    skip_items = (page - 1) * items_per_page
-    universes = list(universes.skip(skip_items).limit(items_per_page))
+    # Acknowledge the callback
+    await callback_query.answer()
+        
+    keys = InlineKeyboardMarkup(row_width=2)
 
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    for universe in universes:
-        keyboard.add(InlineKeyboardButton(universe["name"], callback_data=f"change_universe_{universe['name']}"))
+    keys.add(
+            InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_aniverse_pass"),
+            InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment_completed")
+    )
+        
+    keys.add(
+            InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_aniverse_pass")  
+    )
+        
+    keys.add(
+        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_aniverse")
+    )
+    
+    await callback_query.message.edit_text(
+        f"🧾 Покупка Aniverse pass\n"
+        f"💵 Стоимость: 159 рублей \n"
+        f"➖➖➖➖➖➖\n"
+        f"‼️ `После оплаты нажми кнопку \"я оплатил\"`.\n\n"
+        f"💬 `Возникли сложности с донатом? Пиши сюда - @donshirley` \n"
+        f"➖➖➖➖➖➖\n"
+        f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)",
+        parse_mode="Markdown",
+        reply_markup=keys,
+        disable_web_page_preview=True
+    )
 
-    navigation_buttons = []
-    navigation_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu"))
-    if page > 1:
-        navigation_buttons.append(InlineKeyboardButton("👆", callback_data=f"page_{page - 1}"))
-    if len(universes) == items_per_page:
-        navigation_buttons.append(InlineKeyboardButton("👇", callback_data=f"page_{page + 1}"))
 
-    if navigation_buttons:
-        keyboard.row(*navigation_buttons)
+@dp.callback_query_handler(lambda c: c.data.startswith("alternative_payment_"))
+async def alternative_payment(callback_query: types.CallbackQuery):
 
-
-    return keyboard
-
-
-@dp.callback_query_handler(lambda c: c.data == "back_to_menu")
-async def back_to_menu(callback_query: types.CallbackQuery):
+    # Acknowledge the callback
+    await callback_query.answer()
     
     user_id = callback_query.from_user.id
     
-    user_data = db.users.find_one({"user_id": user_id})
+    purchase_type = callback_query.data.split("_", 3)[3] 
     
-    nickname = user_data.get("nickname", "Гость")
-    
-    spin_chances = user_data.get("spin_chances", 0)
-    universe = user_data.get("universe", "Не выбрана")
-    seasonal_points = user_data.get("seasonal_points", 0)
-    register_date = user_data.get("register_date")
-    player_status = user_data.get("player_status")
-    coins = user_data.get("coins")
-    maximum = user_data.get("maximum_cards")
-    cards = user_data.get("cards", [])
-    
-    # Acknowledge the callback
-    await callback_query.answer()
-
-    keyboard = InlineKeyboardMarkup(row_width=2)
-
-
-    # First row
+    # Create the keyboard with the payment link button
+    keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton(text="🔑 Pass", callback_data="pass"),
-        InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
+        InlineKeyboardButton(text="📥 Отправить чек", url="t.me/donshirley")
+    )
+    keyboard.add(
+        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_paymentaniverse")
     )
 
-    # Second row
-    keyboard.add(
-        InlineKeyboardButton(text="🔮 Магазин", callback_data="shop"),
-        InlineKeyboardButton(text="♻️ Крафт", callback_data="craft")
-    )
 
-    # Third row
-    keyboard.add(
-        InlineKeyboardButton(text="⛺️ Кланы", callback_data="clans"),
-        InlineKeyboardButton(text="🏟 Арена", callback_data="arena")
-    )
+    # Fetch the price of the selected purchase from the database
+    pricing_data = db.pricing.find_one({"type": purchase_type})  # Assuming pricing data is stored in the "pricing" collection
 
-    # Fourth row
-    keyboard.add(
-        InlineKeyboardButton(text="🌙 Задания", callback_data="tasks"),
-        InlineKeyboardButton(text="🔗 Рефералка", callback_data="referral")
-    )
-        
-    # Fifth row
-        
-    keyboard.add(
-        InlineKeyboardButton(text="🗺️ Сменить вселенную", callback_data="change_universe")   
-    )
-        
-    keyboard.add(
-        InlineKeyboardButton(text="🎁 Бонусы за Крутки", callback_data="spin_bonuses")
-    )
-        
-    universe_cut = universe.split(" ", 1)[1]
-        
+    capital_name = (purchase_type.capitalize().split("_"))[0]+" "+(purchase_type.capitalize().split("_"))[1]
+
+    # Get the price from the pricing data
+    price = pricing_data.get("price", 0)
+
     await callback_query.message.edit_text(
-        f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
-        f"🗺️ Вселенная: {universe_cut} \n"
-        f"🃏 Всего карт: {len(cards)} из {maximum}\n"
-        f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
-        f"💰 Коины: {coins} 🪙", 
+        f"🧾 Покупка {capital_name}\n"
+        f"💵 Стоимость: {price} рублей \n"
+        f"➖➖➖➖➖➖\n"
+        
+        f"🛂 Способы оплаты \n\n"
+        f"💳 Сбербанк карта:\n"
+        f"⇨ `4279 3806 7943 8913`\n"
+        f"💰 Тинькофф карта:\n"
+        f"⇨ `2200 7008 8751 1391`\n"
+        f"🥝 Оплата на киви:\n"
+        f"⇨ [Жми на эту ссылку](https://my.qiwi.com/Ashtar-AmkT7jgxyM)\n"
+        f"🗾 Оплата с зарубежных карт:\n"
+        f"⇨ [Жми на эту ссылку](https://boosty.to/aniverse/donate)\n"
+        f"➖➖➖➖➖➖\n"
+        f"‼️ `После оплаты отправь чек и свой ID по ссылке ниже` \n"
+        f"🆔 Твой айди: `{user_id}`\n\n"
+        
+        f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)\n",
         parse_mode="Markdown",
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        disable_web_page_preview=True
     )
-
-@dp.callback_query_handler(lambda c: c.data.startswith("change_universe_"))
-async def change_current_universe(callback_query: types.CallbackQuery):
-    """ 
-    Handle user universe change and save it to the database. 
-    """ 
-    user_id = callback_query.from_user.id 
-    universe_name = callback_query.data.split("_", 1)[1]  # Extract universe name 
-
-    # Acknowledge the callback 
-    await callback_query.answer() 
-
-    # Confirm the selection 
-    user_data = db.users.find_one({"user_id": user_id}) 
-    nickname = user_data.get("nickname", "Гость") 
-
-    # Correct the keyboard and message 
-    await callback_query.message.edit_text( 
-        f"🌱 [{nickname}](tg://user?id={user_id}), ты можешь сохранить свой прогресс в этой вселенной за 30000 🪙 коинов. \n\n" 
-        f"‼️ Или же сменить вселенную бесплатно, но при этом все твои карточки и очки будут обнулены. ", 
-        parse_mode="Markdown", 
-        reply_markup=confirm_change(callback_query), 
-        disable_web_page_preview=True, 
-    ) 
-
-def confirm_change(callback_query_input): 
-    user_id = callback_query_input.from_user.id 
-    universe_name = callback_query_input.data.split("_", 1)[1]  # Extract universe name 
-
-    keyboard = InlineKeyboardMarkup(row_width=2) 
-    keyboard.add( 
-        InlineKeyboardButton(text="💾 Сохранить", callback_data=f"save_universe_data_{universe_name}"), 
-        InlineKeyboardButton(text="♨️ Не сохранять", callback_data=f"reset_universe_data_{universe_name}") 
-    ) 
-    keyboard.add( 
-        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_change") 
-    ) 
-    return keyboard 
-
-@dp.callback_query_handler(lambda c: c.data.startswith("save_universe_data_") or c.data.startswith("reset_universe_data_"))
-async def handle_universe_change(callback_query: types.CallbackQuery): 
-    user_id = callback_query.from_user.id 
-    await callback_query.answer() 
-
-    # Extract universe name from callback data 
-    universe_name = callback_query.data.split("_", 2)[2]  # Extract universe name correctly 
-
-    # Fetch user data 
-    user_data = db.users.find_one({"user_id": user_id}) 
-    if not user_data: 
-        await callback_query.answer("❌ Пользователь не найден.") 
-        return 
-
-    # Fetch universe data 
-    verse_data = db.universes.find_one({"name": universe_name}) 
-    if not verse_data: 
-        await callback_query.answer("❌ Вселенная не найдена в базе данных.") 
-        return 
-
-    # Fetch current universe and its data 
-    current_universe = user_data.get("universe") 
-    current_cards = user_data.get("cards", []) 
-    current_seasonal_points = user_data.get("seasonal_points", 0) 
-    current_coins = user_data.get("coins", 0) 
-
-    if callback_query.data.startswith("save_universe_data"): 
-        # Save the user's progress in the current universe 
-        db.users.update_one( 
-            {"user_id": user_id}, 
-            { 
-                "$set": { 
-                    f"saved_data.{current_universe}.cards": current_cards, 
-                    f"saved_data.{current_universe}.seasonal_points": current_seasonal_points, 
-                    f"saved_data.{current_universe}.coins": current_coins,
-                    "universe": universe_name, 
-                    "maximum_cards": verse_data.get("maximum", 0), 
-                    "cards": current_cards,  # Keep current cards
-                    "seasonal_points": current_seasonal_points,  # Keep seasonal points
-                    "coins": current_coins  # Keep coins
-                } 
-            } 
-        ) 
-        await callback_query.message.edit_text("✅ Ваш прогресс сохранён и вселенная изменена.") 
-    elif callback_query.data.startswith("reset_universe_data"): 
-        # Reset user data for the new universe 
-        db.users.update_one( 
-            {"user_id": user_id}, 
-            { 
-                "$set": { 
-                    "universe": universe_name, 
-                    "maximum_cards": verse_data.get("maximum", 0), 
-                    "cards": [],  # Reset cards
-                    "seasonal_points": 0,  # Reset seasonal points
-                    "coins": 0  # Reset coins
-                } 
-            } 
-        ) 
-@dp.callback_query_handler(lambda c: c.data == "back_to_change")
-async def back_to_change(callback_query: types.CallbackQuery):
-    """
-    Handle the back action to return to the universe selection menu.
-    """
-    # Acknowledge the callback
-    await callback_query.answer()
     
-    page = 1
-
-    # Send the updated universe selection menu
-    await callback_query.message.edit_text(
-        "Выберите вселенную из списка ниже:",
-        reply_markup=get_universe_keyboard_change(page=page)
-    )
-
 
 # Run the Bot
 if __name__ == "__main__":
