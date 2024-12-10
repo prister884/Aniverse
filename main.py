@@ -8,6 +8,7 @@ from datetime import datetime
 import locale
 import random
 from aiogram.types import InputFile
+import time
 
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
@@ -57,7 +58,8 @@ async def start(message: types.Message):
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
     person_link = f"https://t.me/aniverseclonedonbot?start={user_id}"
-
+    current_time = time.time()
+    count_hour = 4
 
     # Check if the user exists in MongoDB
     user_data = db.users.find_one({"user_id": user_id})
@@ -79,6 +81,8 @@ async def start(message: types.Message):
             parse_mode="Markdown",
             reply_markup=get_main_keyboard()  # Display main menu keyboard
         )
+
+
     else:
         # Add new user to MongoDB
         db.users.insert_one({
@@ -86,16 +90,17 @@ async def start(message: types.Message):
             "username": username,
             "nickname": "Гость",
             "universe": "Не выбрана",  # No universe selected yet
-            "cards": [],
+            "cards": [[],[],[],[],[]],
             "seasonal_points": 0,
             "spin_chances": 1,
-            "spins":0,
-            "cards_num": [0,0,0,0,0,0],
+            "spins":1,
             "осколки":0,
             "обычные":0,
             "редкие":0,
             "эпические":0,
             "coins": 0,
+            "last_drop":time.time(),
+            "count_hour":4,
             "redeemed":[],
             "referral_count":0,
             "referral_link": person_link,
@@ -163,7 +168,7 @@ async def back_to(callback_query: types.CallbackQuery):
     register_date = user_data.get("register_date")
     player_status = user_data.get("player_status")
     coins = user_data.get("coins")
-    cards = user_data.get("cards", [])
+    cards = user_data.get("cards", [[],[],[],[],[]])
     verse_data = db.universes.find_one({"name":universe})
     user_data = db.users.find_one({"user_id": user_id})
 
@@ -253,10 +258,12 @@ async def back_to(callback_query: types.CallbackQuery):
 
         universe_cut = universe.split(" ", 1)[1]
 
+        cards_count = casual_count+rare_count+epic_count+legendary_count+mythic_count
+
         await callback_query.message.edit_text(
             f"👤 Нuк: [{nickname}](tg://user?id={user_id}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
+            f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
             f"💰 Коины: {coins} 🪙", 
             parse_mode="Markdown",
@@ -266,7 +273,7 @@ async def back_to(callback_query: types.CallbackQuery):
         await callback_query.message.edit_text(
             f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
+            f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
             f"💰 Коины: {coins} 🪙", 
             parse_mode="Markdown",
@@ -358,13 +365,11 @@ async def select_universe(callback_query: types.CallbackQuery):
     # Fetch universe data to get maximum number of cards
     verse_data = db.universes.find_one({"name": universe_name})
     maximum_cards = verse_data.get("maximum", []) if verse_data else []
-    cards_num = user_data.get("cards_num",[])
-    cards_num[0] = maximum_cards[0]
 
     # Update the user's selected universe and maximum cards in MongoDB
     db.users.update_one(
         {"user_id": user_id},
-        {"$set": {"universe": universe_name, "maximum_cards": maximum_cards[0], "cards_num":cards_num}}
+        {"$set": {"universe": universe_name, "maximum_cards": maximum_cards[0]}}
     )
     
     # Acknowledge the callback
@@ -472,15 +477,16 @@ async def handle_menu(message: types.Message):
     register_date = user_data.get("register_date")
     player_status = user_data.get("player_status")
     coins = user_data.get("coins")
-    cards = user_data.get("cards", [])
+    cards = user_data.get("cards", [[],[],[],[],[]])
     verse_data = db.universes.find_one({"name":universe})
     user_data = db.users.find_one({"user_id": user_id})
 
-    casual_count = user_data.get("casual", 0)
-    rare_count = user_data.get("rare", 0)
-    epic_count = user_data.get("epic", 0)
-    legendary_count = user_data.get("legendary", 0)
-    mythic_count = user_data.get("mythic", 0)
+    casual_cards = len(cards[0])
+    rare_cards = len(cards[1])
+    epic_cards = len(cards[2])
+    legendary_cards = len(cards[3])
+    mythic_cards = len(cards[4])
+    card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
 
     maximum = verse_data.get("maximum", [])
     maximum_casual = maximum[1]
@@ -497,152 +503,231 @@ async def handle_menu(message: types.Message):
     user_input = message.text.strip().lower()
 
     if "получить карту" in user_input:
-        universes = {        
-            "🪸 Ван пис":"onepiece",
-            "🍀 Чёрный клевер":"blackclever",
-            "🗡 Блич":"bleach",
-            "🍥 Наруто":"naruto",
-            "🎩 ДжоДжо":"jojo",
-            "🐜 Хантер × Хантер":"hunterxhunter",
-            "🥀 Токийский Гуль":"tokyog_data",
-            "👊 Ванпанчмен":"onepunchman",
-            "👺 Истребитель демонов":"demonslayer",
-            "🪚 Человек бензопила":"chainsawman",
-            "🍎 Повесть о конце света":"judgedaynotice",
-            "⚽️ Синяя тюрьма":"bluelock",
-            "🪄 Магическая битва":"magicfight",
-            "🧤 Моя геройская академия":"myheroacademy",
-            "🐷 Семь смертных грехов":"sevensins",
-            "⚔️ Берсерк":"berserk",
-            "🩻 Атака титанов":"titanattack",
-            "📓 Тетрадь смерти":"deathnote",
-            "🧚 Хвост феи":"fairystail",
-            "☀️ Сага о Винланде":"winlandsaga",
-            "⏱️ Токийские мстители":"tokyoavengers",
-            "🔮 Моб Психо 100":"mobpsycho100",
-            "⚾️ Покемон":"pokemon",
-            "☄️ Драгонболл":"dragonball",
-            "♟ Сололевелинг":"sololevelling"
-        }
+
+        count_hour = user_data.get("count_hour", 4)
+
+        # Assuming user_data is already defined, and spin_chances is initialized
+        start_time = user_data.get("last_drop", time.time())  # Get last drop time in seconds
+        count_seconds = count_hour * 3600  # 4 hours in seconds
+
+        # Get the current time
+        current_time = time.time()  # Get the current time in seconds
+        elapsed_time = current_time - start_time  # Calculate elapsed time
+
+        # Calculate remaining time
+        remaining_time = count_seconds - elapsed_time
+        remaining_hours = int(remaining_time // 3600)
+        remaining_minutes = int((remaining_time % 3600) // 60)
+        remaining_seconds = int(remaining_time % 60)
+
+        if spin_chances>0 or elapsed_time >= count_seconds:
+
+            # Deduct a spin chance
+            spin_chances = user_data.get("spin_chances", 0)
+            spin_chances -= 1 
+
+            # Update the spin chances in the database
+            db.users.update_one({"user_id": user_id}, {"$set": {"spin_chances": spin_chances, "last_drop":current_time}})
 
 
+            if user_data:
+                numbers = list(range(1, maximum[0]+1))
+            
+                # Weights for each range
+                weights = []
 
-        numbers = list(range(1, maximum[0]+1))
-        random_number = random.choices(numbers, weights=weights, k=1)[0]
-        
-        if universes[user_data.get("universe")] == "tokyog_data":
-            card_data = db.tokyog_data.find_one({"id":random_number})
-        
-        card_name = card_data.get("name")
-        card_rarity = card_data.get("rarity")
-        card_attack = card_data.get("attack")
-        card_health = card_data.get("health")
-        card_value = card_data.get("value")
-        card_img_url = card_data.get("image_url")
+                # Assign weights based on the described probabilities
+                for num in numbers:
+                    if 1 <= num <= maximum_casual:
+                        weights.append(2)  # Twice the probability of the next range
+                    elif maximum_casual+1 <= num <= maximum_rare:
+                        weights.append(1.5)  # Normal probability
+                    elif maximum_rare+1 <= num <= maximum_epic:
+                        weights.append(1)  # Half the probability of the previous range
+                    elif maximum_epic+1 <= num <= maximum_legendary:
+                        weights.append(0.5)  # Half the probability of the previous range
+                    else:
+                        weights.append(0.3)  # Quarter of the probability of the previous range
+                
+                random_number = random.choices(numbers, weights=weights, k=1)[0]
 
-        # Weights for each range
-        weights = []
-
-        # Assign weights based on the described probabilities
-        for num in numbers:
-            if 1 <= num <= 31:
-                weights.append(2)  # Twice the probability of the next range
-            elif 32 <= num <= 53:
-                weights.append(1.5)  # Normal probability
-            elif 54 <= num <= 69:
-                weights.append(1)  # Half the probability of the previous range
-            elif 70 <= num <= 80:
-                weights.append(0.5)  # Half the probability of the previous range
-            else:
-                weights.append(0.3)  # Quarter of the probability of the previous range
-        
-
-        user_id = message.from_user.id
-        user_data = db.users.find_one({"user_id": user_id})
-        cards = user_data.get("cards",[])
-        cards.append(random_number)
-
-
-        db.update_one(
-            {"user_id":user_id},
-            {
-                "$set": {
-                    "cards":cards
+                universes = {        
+                    "🪸 Ван пис":"onepiece_data",
+                    "🍀 Чёрный клевер":"blackclever_data",
+                    "🗡 Блич":"bleach_data",
+                    "🍥 Наруто":"naruto_data",
+                    "🎩 ДжоДжо":"jojo_data",
+                    "🐜 Хантер × Хантер":"hunterxhunter_data",
+                    "🥀 Токийский Гуль":"tokyog_data",
+                    "👊 Ванпанчмен":"onepunchman_data",
+                    "👺 Истребитель демонов":"demonslayer_data",
+                    "🪚 Человек бензопила":"chainsawman_data",
+                    "🍎 Повесть о конце света":"judgedaynotice_data",
+                    "⚽️ Синяя тюрьма":"bluelock_data",
+                    "🪄 Магическая битва":"magicfight_data",
+                    "🧤 Моя геройская академия":"myheroacademy_data",
+                    "🐷 Семь смертных грехов":"sevensins_data",
+                    "⚔️ Берсерк":"berserk_data",
+                    "🩻 Атака титанов":"titanattack_data",
+                    "📓 Тетрадь смерти":"deathnote_data",
+                    "🧚 Хвост феи":"fairytail_data",
+                    "☀️ Сага о Винланде":"winlandsaga_data",
+                    "⏱️ Токийские мстители":"tokyoavengers_data",
+                    "🔮 Моб Психо 100":"mobpsycho100_data",
+                    "⚾️ Покемон":"pokemon_data",
+                    "☄️ Драгонболл":"dragonball_data",
+                    "♟ Сололевелинг":"sololevelling_data"
                 }
-            }
-        )
 
-        # Handle "Получить карту"
-        if card_img_url.endswith((".gif", ".mp4")):
-            await message.answer_animation(
-                open(card_img_url, "rb"),
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown"
-            )
-        else:  # Assume it's an image
-            await message.answer_photo(
-                card_img_url,
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown"
-            )
+                # Validate the universe exists
+                if universe in universes:
+                    collection_name = universes[universe]  # Get the corresponding collection name
+                    card_data = db[collection_name].find_one({"id": random_number})  # Query the database
+                else:
+                    pass
 
 
+                card_name = card_data.get("name")
+                card_rarity = card_data.get("rarity")
+                card_attack = card_data.get("attack")
+                card_health = card_data.get("health")
+                card_value = card_data.get("value")
+                card_img_url = card_data.get("image_url")
+                cards = user_data.get("cards",[[],[],[],[],[]])
+                flattened_cards = [item for sublist in cards for item in sublist]
 
 
-    
-    elif "мои карты" in user_input:
-        
-        if len(cards) == 0:
-            
-            # await message.answer(f"🃏🙆 [{nickname}](tg://user?id={user_id}), на данный момент у тебя нет карт", parse_mode="Markdown")
+                if random_number not in flattened_cards:
+
+                    if card_rarity == "Обычная":
+                        cards[0].append(random_number)
+                    elif card_rarity == "Редкая":
+                        cards[1].append(random_number)
+                    elif card_rarity == "Эпическая":
+                        cards[2].append(random_number)
+                    elif card_rarity == "Легендарная":
+                        cards[3].append(random_number)
+                    elif card_rarity == "Мифическая":
+                        cards[4].append(random_number)
 
 
-            keyboard_cards = InlineKeyboardMarkup(row_width=1)
-        
-            keyboard_cards.add(
-                InlineKeyboardButton(text=f"⚡️ Обычные - {casual_count}/{maximum_casual}", callback_data="show_casual"),
-                InlineKeyboardButton(text=f"✨ Редкие - {rare_count}/{maximum_rare}", callback_data="show_rare"),
-                InlineKeyboardButton(text=f"🐉 Эпические - {epic_count}/{maximum_epic}", callback_data="show_epic"),
-                InlineKeyboardButton(text=f"🩸 Легендарные - {legendary_count}/{maximum_legendary}", callback_data="show_legendary"),
-                InlineKeyboardButton(text=f"🧩 Мифические - {mythic_count}/{maximum_mythic}", callback_data="show_mythic"),
-                InlineKeyboardButton(text=f"⚛️ Все карты - {len(cards)}/{maximum[0]}", callback_data="show_all"),
-                InlineKeyboardButton(text=f"🪬 LIMITED - 0", callback_data="show_limited"),
-            )
-            
-            # Handle "Мои карты"
+                    db.users.update_one({"user_id":user_id},{"$set": {"cards":cards, "seasonal_points":seasonal_points+card_value}})
+
+                    # Handle "Получить карту"
+                    if card_img_url.endswith((".gif", ".mp4")):
+                        await message.answer_animation(
+                            open(card_img_url, "rb"),
+                            caption=f"{card_name}\n\n"
+                                    f"⚜️ Редкость: {card_rarity}\n"
+                                    f"🗡️ Атака: {card_attack}\n"
+                                    f"❤️ Здоровье: {card_health}\n\n"
+                                    f"💠 Ценность: {card_value} _pts_",
+                            parse_mode="Markdown"
+                        )
+                    else:  # Assume it's an image
+                        await message.answer_photo(
+                            card_img_url,
+                            caption=f"{card_name}\n\n"
+                                    f"⚜️ Редкость: {card_rarity}\n"
+                                    f"🗡️ Атака: {card_attack}\n"
+                                    f"❤️ Здоровье: {card_health}\n\n"
+                                    f"💠 Ценность: {card_value} _pts_",
+                            parse_mode="Markdown"
+                        )
+
+                else:
+                    # Handle "Получить карту"
+                    if card_img_url.endswith((".gif", ".mp4")):
+
+                        осколки = user_data.get("осколки",0)
+                        osk_added = random.randint(40,51)
+
+                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value}})
+
+                        await message.answer_animation(
+                            open(card_img_url, "rb"),
+                            caption=f"🧩🃏 Вау, [{nickname}](tg://user?id={user_id}), попалась мифическая повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
+                                    f"⛩️ +{card_value} _pts_\n"
+                                    f"🀄️ +{osk_added} _осколков_\n\n"
+                                    f"💠 Всего очков: {seasonal_points+card_value} pts",
+                            parse_mode="Markdown"
+                        )
+
+                    elif card_rarity == "Легендарная":
+
+                        осколки = user_data.get("осколки",0)
+                        osk_added = random.randint(10,31)
+
+                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value}})
+
+                        await message.answer_animation(
+                            open(card_img_url, "rb"),
+                            caption=f"🩸🃏 Ого, [{nickname}](tg://user?id={user_id}), попалась легендарная повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
+                                    f"⛩️ +{card_value} _pts_\n"
+                                    f"🀄️ +{osk_added} _осколков_\n\n"
+                                    f"💠 Всего очков: {seasonal_points+card_value} pts",
+                            parse_mode="Markdown"
+                        )
+
+                    else:  # Assume it's an image
+
+                        обычные = user_data.get("обычные")
+                        редкие = user_data.get("редкие")
+                        эпические = user_data.get("эпические")
+
+                        if card_rarity == "Обычная":
+                            db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные+1}})
+                        elif card_rarity == "Редкая":
+                            db.users.update_one({"user_id":user_id},{"$set":{"редкие":обычные+1}})
+                        else:
+                            db.users.update_one({"user_id":user_id},{"$set":{"эпические":обычные+1}})
+
+                        db.users.update_one({"user_id":user_id},{"$set": {"seasonal_points":seasonal_points+card_value}})
+
+                        await message.answer_photo(
+                            card_img_url,
+                            caption=f"🃏[{nickname}](tg://user?id={user_id}), попалась повторка, тебе будут начислены только очки за карту\n\n"
+                                    f"⛩️ +{card_value} _pts_\n\n"
+                                    f"💠 Всего очков: {seasonal_points+card_value} pts",
+                            parse_mode="Markdown"
+                        )
+            else: 
+                await message.answer("❌ Пользователь не найден.")
+        else: 
             await message.answer(
-                f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
-                reply_markup=keyboard_cards, 
+                f"🃏🙅‍♂ [{nickname}](tg://user?id={user_id}), получать карточки можно раз в 4 часа. Приходи через:\n"
+                f"➖➖➖➖➖➖\n"
+                f"⏳ {remaining_hours}ч. {remaining_minutes}м. {remaining_seconds}",
                 parse_mode="Markdown"
             )
+
+    elif "мои карты" in user_input:
+
+        cards_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
+            
+        if cards_count == 0:
+                    
+            await message.answer(f"🃏🙆 [{nickname}](tg://user?id={user_id}), на данный момент у тебя нет карт", parse_mode="Markdown")
 
         else: 
             keyboard_cards = InlineKeyboardMarkup(row_width=1)
-        
+                
             keyboard_cards.add(
-                InlineKeyboardButton(text=f"⚡️ Обычные - {casual_count}/{maximum_casual}", callback_data="show_casual"),
-                InlineKeyboardButton(text=f"✨ Редкие - {rare_count}/{maximum_rare}", callback_data="show_rare"),
-                InlineKeyboardButton(text=f"🐉 Эпические - {epic_count}/{maximum_epic}", callback_data="show_epic"),
-                InlineKeyboardButton(text=f"🩸 Легендарные - {legendary_count}/{maximum_legendary}", callback_data="show_legendary"),
-                InlineKeyboardButton(text=f"🧩 Мифические - {mythic_count}/{maximum_mythic}", callback_data="show_mythic"),
-                InlineKeyboardButton(text=f"⚛️ Все карты - {len(cards)}/{maximum[0]}", callback_data="show_all"),
+                InlineKeyboardButton(text=f"⚡️ Обычные - {casual_cards}/{maximum_casual}", callback_data="show_casual"),
+                InlineKeyboardButton(text=f"✨ Редкие - {rare_cards}/{maximum_rare}", callback_data="show_rare"),
+                InlineKeyboardButton(text=f"🐉 Эпические - {epic_cards}/{maximum_epic}", callback_data="show_epic"),
+                InlineKeyboardButton(text=f"🩸 Легендарные - {legendary_cards}/{maximum_legendary}", callback_data="show_legendary"),
+                InlineKeyboardButton(text=f"🧩 Мифические - {mythic_cards}/{maximum_mythic}", callback_data="show_mythic"),
+                InlineKeyboardButton(text=f"⚛️ Все карты - {card_count}/{maximum[0]}", callback_data="show_all"),
                 InlineKeyboardButton(text=f"🪬 LIMITED - 0", callback_data="show_limited"),
             )
-            
+                    
             # Handle "Мои карты"
             await message.answer(
                 f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
                 reply_markup=keyboard_cards, 
                 parse_mode="Markdown"
-            )
+            )     
 
 
 
@@ -687,10 +772,13 @@ async def handle_menu(message: types.Message):
         
         universe_cut = universe.split(" ", 1)[1] if universe != "Не выбрана" else universe
         
+        cards_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
+
+
         await message.answer(
             f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
+            f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
             f"💰 Коины: {coins} 🪙", 
             parse_mode="Markdown",

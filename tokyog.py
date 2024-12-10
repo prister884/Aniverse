@@ -272,37 +272,37 @@ tokyog = [
     {
         "id": 31,
         "name": "✨ Ясухиса Курона",
-        "rarity": "Обычная",
-        "attack": 1000,
-        "health": 2000,
-        "value": 500,
+        "rarity": "Редкая",
+        "attack": 3500,
+        "health": 5500,
+        "value": 2500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/31.jpg"
     },
     {
         "id": 32,
         "name": "✨ Итори",
         "rarity": "Редкая",
-        "attack": 3500,
-        "health": 5500,
-        "value": 2500,
+        "attack": 3000,
+        "health": 5000,
+        "value": 1500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/32.jpg"
     },
     {
         "id": 33,
         "name": "✨ Куке Урие",
         "rarity": "Редкая",
-        "attack": 3000,
+        "attack": 4000,
         "health": 5000,
-        "value": 1500,
+        "value": 3500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/33.jpg"
     },
     {
         "id": 34,
         "name": "✨ Курео Мадо",
         "rarity": "Редкая",
-        "attack": 4000,
-        "health": 5000,
-        "value": 3500,
+        "attack": 3000,
+        "health": 5500,
+        "value": 3000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/34.jpg"
     },
     {
@@ -310,7 +310,7 @@ tokyog = [
         "name": "✨ Братья Бин",
         "rarity": "Редкая",
         "attack": 3000,
-        "health": 5500,
+        "health": 6000,
         "value": 3000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/35.jpg"
     },
@@ -320,14 +320,14 @@ tokyog = [
         "rarity": "Редкая",
         "attack": 3000,
         "health": 6000,
-        "value": 3000,
+        "value": 4000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/36.jpg"
     },
     {
         "id": 37,
         "name": "✨ Хинами Фуегучи",
         "rarity": "Редкая",
-        "attack": 3000,
+        "attack": 4000,
         "health": 6000,
         "value": 4000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/37.jpg"
@@ -336,9 +336,9 @@ tokyog = [
         "id": 38,
         "name": "✨ Кая Ирими",
         "rarity": "Редкая",
-        "attack": 4000,
-        "health": 6000,
-        "value": 4000,
+        "attack": 3000,
+        "health": 5000,
+        "value": 1500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/38.jpg"
     },
     {
@@ -353,45 +353,45 @@ tokyog = [
     {
         "id": 40,
         "name": "✨ Киёко Аура",
-        "rarity": "Обычная",
-        "attack": 3000,
-        "health": 5000,
-        "value": 1500,
+        "rarity": "Редкая",
+        "attack": 4800,
+        "health": 5500,
+        "value": 2700,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/40.jpg"
     },
     {
         "id": 41,
         "name": "✨ Ясухиса Наширо",
         "rarity": "Редкая",
-        "attack": 4800,
+        "attack": 3500,
         "health": 5500,
-        "value": 2700,
+        "value": 2500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/41.jpg"
     },
     {
         "id": 42,
         "name": "✨ Чёрная Собака",
         "rarity": "Редкая",
-        "attack": 3500,
+        "attack": 4000,
         "health": 5500,
-        "value": 2500,
+        "value": 3500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/42.jpg"
     },
     {
         "id": 43,
         "name": "✨ Моган Тонакамару",
         "rarity": "Редкая",
-        "attack": 4000,
+        "attack": 3000,
         "health": 5500,
-        "value": 3500,
+        "value": 2000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/43.jpg"
     },
     {
         "id": 44,
         "name": "✨ Юкинори Шинохара",
         "rarity": "Редкая",
-        "attack": 3000,
-        "health": 5500,
+        "attack": 3500,
+        "health": 6000,
         "value": 2000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/44.jpg"
     },
@@ -399,16 +399,16 @@ tokyog = [
         "id": 45,
         "name": "✨ Чую Хачикава",
         "rarity": "Редкая",
-        "attack": 3500,
-        "health": 6000,
-        "value": 2000,
+        "attack": 4000,
+        "health": 5000,
+        "value": 1500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/45.jpg"
     },
     {
         "id": 46,
         "name": "✨ Энджи Кома",
         "rarity": "Редкая",
-        "attack": 4000,
+        "attack": 3000,
         "health": 5000,
         "value": 1500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/46.jpg"
@@ -426,36 +426,36 @@ tokyog = [
         "id": 48,
         "name": "✨ Маю",
         "rarity": "Редкая",
-        "attack": 3000,
+        "attack": 3500,
         "health": 5000,
-        "value": 1500,
+        "value": 2000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/48.jpg"
     },
     {
         "id": 49,
         "name": "✨ Генши Ширазу",
         "rarity": "Редкая",
-        "attack": 3500,
+        "attack": 3000,
         "health": 5000,
-        "value": 2000,
+        "value": 4000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/49.jpg"
     },
     {
         "id": 50,
         "name": "✨ Биг Мадам",
         "rarity": "Редкая",
-        "attack": 3000,
+        "attack": 3500,
         "health": 6000,
-        "value": 4000,
+        "value": 4500,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/50.jpg"
     },
     {
         "id": 51,
         "name": "✨ Миза Кусакари",
         "rarity": "Редкая",
-        "attack": 3500,
-        "health": 6000,
-        "value": 4500,
+        "attack": 3000,
+        "health": 5500,
+        "value": 2000,
         "image_url": "https://raw.githubusercontent.com/prister884/aniverse-files/refs/heads/main/tokyog/51.jpg"
     },
     {
