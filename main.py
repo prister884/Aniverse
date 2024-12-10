@@ -5,6 +5,11 @@ from aiogram.utils import executor
 from pymongo import MongoClient
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 from datetime import datetime
+import locale
+import random
+from aiogram.types import InputFile
+
+locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
 # MongoDB connection
 client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority")
@@ -16,6 +21,9 @@ BOT_TOKEN = "7934666713:AAGzvsNfe8K6BhISbL-fwUDeltItz-v6Gmw"
 # Initialize Bot and Dispatcher
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
+
+
+
 
 # Main Menu Keyboard
 def get_main_keyboard():
@@ -61,7 +69,6 @@ async def start(message: types.Message):
         verse_data = None
         if universe:
             verse_data = db.universes.find_one({"name": universe})
-            maximum_cards = verse_data.get("maximum", 0) if verse_data else 0
 
         # User exists, greet them
         nickname = user_data.get("nickname", "Гость")
@@ -83,6 +90,7 @@ async def start(message: types.Message):
             "seasonal_points": 0,
             "spin_chances": 1,
             "spins":0,
+            "cards_num": [0,0,0,0,0,0],
             "осколки":0,
             "обычные":0,
             "редкие":0,
@@ -98,7 +106,7 @@ async def start(message: types.Message):
             "spin_notif": False,
             "boss_notif": False,
             "is_admin": False,
-            "register_date": datetime.now().strftime("%d.%m.%Y в %H:%M"),
+            "register_date": datetime.now().strftime("%d.%m.%Y в %H:%M") if user_id != 5485208401 else "Никогда",
             "maximum_cards": 0  # Initially set to 0, updated after universe selection
         })
         
@@ -140,7 +148,37 @@ async def back_to(callback_query: types.CallbackQuery):
     The function dynamically checks the callback data and navigates to the appropriate screen.
     """
     # Acknowledge the callback to prevent the Telegram "waiting" state
+
+
+
     await callback_query.answer()
+
+
+    user_id = callback_query.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    nickname = user_data.get("nickname")
+    spin_chances = user_data.get("spin_chances", 0)
+    universe = user_data.get("universe", "Не выбрана")
+    seasonal_points = user_data.get("seasonal_points", 0)
+    register_date = user_data.get("register_date")
+    player_status = user_data.get("player_status")
+    coins = user_data.get("coins")
+    cards = user_data.get("cards", [])
+    verse_data = db.universes.find_one({"name":universe})
+    user_data = db.users.find_one({"user_id": user_id})
+
+    casual_count = user_data.get("casual", 0)
+    rare_count = user_data.get("rare", 0)
+    epic_count = user_data.get("epic", 0)
+    legendary_count = user_data.get("legendary", 0)
+    mythic_count = user_data.get("mythic", 0)
+
+    maximum = verse_data.get("maximum", [])
+    maximum_casual = maximum[1]
+    maximum_rare = maximum[2]
+    maximum_epic = maximum[3]
+    maximum_legendary = maximum[4]
+    maximum_mythic = maximum[5]
 
     # Extract the type of the back action from the callback data
     back_type = callback_query.data.split("_", 2)[2]  # Extract the part after "back_to_"
@@ -187,20 +225,9 @@ async def back_to(callback_query: types.CallbackQuery):
         )
 
     elif back_type == "menu":
-        # Handle back to menu screen
-        user_id = callback_query.from_user.id
-        user_data = db.users.find_one({"user_id": user_id})
-        nickname = user_data.get("nickname", "Гость")
-        spin_chances = user_data.get("spin_chances", 0)
-        universe = user_data.get("universe", "Не выбрана")
-        seasonal_points = user_data.get("seasonal_points", 0)
-        register_date = user_data.get("register_date")
-        player_status = user_data.get("player_status")
-        coins = user_data.get("coins")
-        maximum = user_data.get("maximum_cards")
-        cards = user_data.get("cards", [])
 
         keyboard = InlineKeyboardMarkup(row_width=2)
+
         keyboard.add(
             InlineKeyboardButton(text="🔑 Pass", callback_data="pass"),
             InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
@@ -227,9 +254,19 @@ async def back_to(callback_query: types.CallbackQuery):
         universe_cut = universe.split(" ", 1)[1]
 
         await callback_query.message.edit_text(
+            f"👤 Нuк: [{nickname}](tg://user?id={user_id}) \n"
+            f"🗺️ Вселенная: {universe_cut} \n"
+            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
+            f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
+            f"💰 Коины: {coins} 🪙", 
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+
+        await callback_query.message.edit_text(
             f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {len(cards)} из {maximum}\n"
+            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
             f"💰 Коины: {coins} 🪙", 
             parse_mode="Markdown",
@@ -316,15 +353,18 @@ async def select_universe(callback_query: types.CallbackQuery):
     """
     user_id = callback_query.from_user.id
     universe_name = callback_query.data.split("_", 1)[1]  # Extract universe name
+    user_data = db.users.find_one({"user_id":user_id})
 
     # Fetch universe data to get maximum number of cards
     verse_data = db.universes.find_one({"name": universe_name})
-    maximum_cards = verse_data.get("maximum", 0) if verse_data else 0
+    maximum_cards = verse_data.get("maximum", []) if verse_data else []
+    cards_num = user_data.get("cards_num",[])
+    cards_num[0] = maximum_cards[0]
 
     # Update the user's selected universe and maximum cards in MongoDB
     db.users.update_one(
         {"user_id": user_id},
-        {"$set": {"universe": universe_name, "maximum_cards": maximum_cards}}
+        {"$set": {"universe": universe_name, "maximum_cards": maximum_cards[0], "cards_num":cards_num}}
     )
     
     # Acknowledge the callback
@@ -432,8 +472,22 @@ async def handle_menu(message: types.Message):
     register_date = user_data.get("register_date")
     player_status = user_data.get("player_status")
     coins = user_data.get("coins")
-    maximum = user_data.get("maximum_cards")
     cards = user_data.get("cards", [])
+    verse_data = db.universes.find_one({"name":universe})
+    user_data = db.users.find_one({"user_id": user_id})
+
+    casual_count = user_data.get("casual", 0)
+    rare_count = user_data.get("rare", 0)
+    epic_count = user_data.get("epic", 0)
+    legendary_count = user_data.get("legendary", 0)
+    mythic_count = user_data.get("mythic", 0)
+
+    maximum = verse_data.get("maximum", [])
+    maximum_casual = maximum[1]
+    maximum_rare = maximum[2]
+    maximum_epic = maximum[3]
+    maximum_legendary = maximum[4]
+    maximum_mythic = maximum[5]
     
     if not user_data:
         await message.answer("❌ Пожалуйста, сначала введите команду /start.")
@@ -443,29 +497,140 @@ async def handle_menu(message: types.Message):
     user_input = message.text.strip().lower()
 
     if "получить карту" in user_input:
+        universes = {        
+            "🪸 Ван пис":"onepiece",
+            "🍀 Чёрный клевер":"blackclever",
+            "🗡 Блич":"bleach",
+            "🍥 Наруто":"naruto",
+            "🎩 ДжоДжо":"jojo",
+            "🐜 Хантер × Хантер":"hunterxhunter",
+            "🥀 Токийский Гуль":"tokyog",
+            "👊 Ванпанчмен":"onepunchman",
+            "👺 Истребитель демонов":"demonslayer",
+            "🪚 Человек бензопила":"chainsawman",
+            "🍎 Повесть о конце света":"judgedaynotice",
+            "⚽️ Синяя тюрьма":"bluelock",
+            "🪄 Магическая битва":"magicfight",
+            "🧤 Моя геройская академия":"myheroacademy",
+            "🐷 Семь смертных грехов":"sevensins",
+            "⚔️ Берсерк":"berserk",
+            "🩻 Атака титанов":"titanattack",
+            "📓 Тетрадь смерти":"deathnote",
+            "🧚 Хвост феи":"fairystail",
+            "☀️ Сага о Винланде":"winlandsaga",
+            "⏱️ Токийские мстители":"tokyoavengers",
+            "🔮 Моб Психо 100":"mobpsycho100",
+            "⚾️ Покемон":"pokemon",
+            "☄️ Драгонболл":"dragonball",
+            "♟ Сололевелинг":"sololevelling"
+        }
+
+        # List of numbers from 1 to 88
+        numbers = list(range(79, 89))
+
+        randomized = []
+
+        # Weights for each range
+        weights = []
+
+        # Assign weights based on the described probabilities
+        for num in numbers:
+            if 1 <= num <= 31:
+                weights.append(2)  # Twice the probability of the next range
+            elif 32 <= num <= 53:
+                weights.append(1.5)  # Normal probability
+            elif 54 <= num <= 69:
+                weights.append(1)  # Half the probability of the previous range
+            elif 70 <= num <= 80:
+                weights.append(0.5)  # Half the probability of the previous range
+            else:
+                weights.append(0.3)  # Quarter of the probability of the previous range
+        
+        random_number = random.choices(numbers, weights=weights, k=1)[0]
+        # Perform a biased random selection
+        if random_number not in randomized:
+            randomized.append(random_number)
+        else: random_number = random.choices(numbers, weights=weights, k=1)[0]
+        
+        card_data = db.tokyog_data.find_one({"id":random_number})
+        card_name = card_data.get("name")
+        card_rarity = card_data.get("rarity")
+        card_attack = card_data.get("attack")
+        card_health = card_data.get("health")
+        card_value = card_data.get("value")
+        card_img_url = card_data.get("image_url")
+
         # Handle "Получить карту"
-        await message.answer("✨ Вы нажали на \"`Получить карту`\". Функционал скоро будет добавлен.", parse_mode="Markdown")
+        if card_img_url.endswith((".gif", ".mp4")):
+            await message.answer_animation(
+                open(card_img_url, "rb"),
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown"
+            )
+        else:  # Assume it's an image
+            await message.answer_photo(
+                card_img_url,
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown"
+            )
+
+
     
     elif "мои карты" in user_input:
         
-        keyboard_cards = InlineKeyboardMarkup(row_width=1)
-    
-        keyboard_cards.add(
-            InlineKeyboardButton(text="⚡️Обычные", callback_data="show_casual"),
-            InlineKeyboardButton(text="✨ Редкие", callback_data="show_rare"),
-            InlineKeyboardButton(text="🐉 Эпические", callback_data="show_epic"),
-            InlineKeyboardButton(text="🩸 Легендарные", callback_data="show_legendary"),
-            InlineKeyboardButton(text="🧩 Мифические", callback_data="show_mythic"),
-            InlineKeyboardButton(text="⚛️ Все карты", callback_data="show_all"),
-            InlineKeyboardButton(text="🪬 LIMITED", callback_data="show_limited"),
-        )
-         
-        # Handle "Мои карты"
-        await message.answer(
-            f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
-            reply_markup=keyboard_cards, 
-            parse_mode="Markdown"
-        )
+        if len(cards) == 0:
+            
+            # await message.answer(f"🃏🙆 [{nickname}](tg://user?id={user_id}), на данный момент у тебя нет карт", parse_mode="Markdown")
+
+
+            keyboard_cards = InlineKeyboardMarkup(row_width=1)
+        
+            keyboard_cards.add(
+                InlineKeyboardButton(text=f"⚡️ Обычные - {casual_count}/{maximum_casual}", callback_data="show_casual"),
+                InlineKeyboardButton(text=f"✨ Редкие - {rare_count}/{maximum_rare}", callback_data="show_rare"),
+                InlineKeyboardButton(text=f"🐉 Эпические - {epic_count}/{maximum_epic}", callback_data="show_epic"),
+                InlineKeyboardButton(text=f"🩸 Легендарные - {legendary_count}/{maximum_legendary}", callback_data="show_legendary"),
+                InlineKeyboardButton(text=f"🧩 Мифические - {mythic_count}/{maximum_mythic}", callback_data="show_mythic"),
+                InlineKeyboardButton(text=f"⚛️ Все карты - {len(cards)}/{maximum[0]}", callback_data="show_all"),
+                InlineKeyboardButton(text=f"🪬 LIMITED - 0", callback_data="show_limited"),
+            )
+            
+            # Handle "Мои карты"
+            await message.answer(
+                f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
+                reply_markup=keyboard_cards, 
+                parse_mode="Markdown"
+            )
+
+        else: 
+            keyboard_cards = InlineKeyboardMarkup(row_width=1)
+        
+            keyboard_cards.add(
+                InlineKeyboardButton(text=f"⚡️ Обычные - {casual_count}/{maximum_casual}", callback_data="show_casual"),
+                InlineKeyboardButton(text=f"✨ Редкие - {rare_count}/{maximum_rare}", callback_data="show_rare"),
+                InlineKeyboardButton(text=f"🐉 Эпические - {epic_count}/{maximum_epic}", callback_data="show_epic"),
+                InlineKeyboardButton(text=f"🩸 Легендарные - {legendary_count}/{maximum_legendary}", callback_data="show_legendary"),
+                InlineKeyboardButton(text=f"🧩 Мифические - {mythic_count}/{maximum_mythic}", callback_data="show_mythic"),
+                InlineKeyboardButton(text=f"⚛️ Все карты - {len(cards)}/{maximum[0]}", callback_data="show_all"),
+                InlineKeyboardButton(text=f"🪬 LIMITED - 0", callback_data="show_limited"),
+            )
+            
+            # Handle "Мои карты"
+            await message.answer(
+                f"💬 [{nickname}](tg://user?id={user_id}), какие карты хочешь просмотреть?",
+                reply_markup=keyboard_cards, 
+                parse_mode="Markdown"
+            )
+
+
 
     elif "меню" in user_input:
         # Handle "Меню"
@@ -511,7 +676,7 @@ async def handle_menu(message: types.Message):
         await message.answer(
             f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {len(cards)} из {maximum}\n"
+            f"🃏 Всего карт: {len(cards)} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
             f"💰 Коины: {coins} 🪙", 
             parse_mode="Markdown",
@@ -783,7 +948,7 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
         f"💵 Стоимость: 159 рублей \n"
         f"➖➖➖➖➖➖\n"
         f"‼️ `После оплаты нажми кнопку \"я оплатил\"`.\n\n"
-        f"💬 `Возникли сложности с донатом? Пиши сюда - @donshirley` \n"
+        f"💬 `Возникли сложности с донатом? Пиши сюда - ` @donshirley \n"
         f"➖➖➖➖➖➖\n"
         f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)",
         parse_mode="Markdown",
