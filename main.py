@@ -660,8 +660,8 @@ async def handle_menu(message: types.Message):
 
                         db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value}})
 
-                        await message.answer_animation(
-                            open(card_img_url, "rb"),
+                        await message.answer_photo(
+                            card_img_url,
                             caption=f"🩸🃏 Ого, [{nickname}](tg://user?id={user_id}), попалась легендарная повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
                                     f"⛩️ +{card_value} _pts_\n"
                                     f"🀄️ +{osk_added} _осколков_\n\n"
