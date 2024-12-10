@@ -504,7 +504,7 @@ async def handle_menu(message: types.Message):
             "🍥 Наруто":"naruto",
             "🎩 ДжоДжо":"jojo",
             "🐜 Хантер × Хантер":"hunterxhunter",
-            "🥀 Токийский Гуль":"tokyog",
+            "🥀 Токийский Гуль":"tokyog_data",
             "👊 Ванпанчмен":"onepunchman",
             "👺 Истребитель демонов":"demonslayer",
             "🪚 Человек бензопила":"chainsawman",
@@ -525,10 +525,20 @@ async def handle_menu(message: types.Message):
             "♟ Сололевелинг":"sololevelling"
         }
 
-        # List of numbers from 1 to 88
-        numbers = list(range(79, 89))
 
-        randomized = []
+
+        numbers = list(range(1, maximum[0]+1))
+        random_number = random.choices(numbers, weights=weights, k=1)[0]
+        
+        if universes[user_data.get("universe")] == "tokyog_data":
+            card_data = db.tokyog_data.find_one({"id":random_number})
+        
+        card_name = card_data.get("name")
+        card_rarity = card_data.get("rarity")
+        card_attack = card_data.get("attack")
+        card_health = card_data.get("health")
+        card_value = card_data.get("value")
+        card_img_url = card_data.get("image_url")
 
         # Weights for each range
         weights = []
@@ -546,19 +556,21 @@ async def handle_menu(message: types.Message):
             else:
                 weights.append(0.3)  # Quarter of the probability of the previous range
         
-        random_number = random.choices(numbers, weights=weights, k=1)[0]
-        # Perform a biased random selection
-        if random_number not in randomized:
-            randomized.append(random_number)
-        else: random_number = random.choices(numbers, weights=weights, k=1)[0]
-        
-        card_data = db.tokyog_data.find_one({"id":random_number})
-        card_name = card_data.get("name")
-        card_rarity = card_data.get("rarity")
-        card_attack = card_data.get("attack")
-        card_health = card_data.get("health")
-        card_value = card_data.get("value")
-        card_img_url = card_data.get("image_url")
+
+        user_id = message.from_user.id
+        user_data = db.users.find_one({"user_id": user_id})
+        cards = user_data.get("cards",[])
+        cards.append(random_number)
+
+
+        db.update_one(
+            {"user_id":user_id},
+            {
+                "$set": {
+                    "cards":cards
+                }
+            }
+        )
 
         # Handle "Получить карту"
         if card_img_url.endswith((".gif", ".mp4")):
@@ -581,6 +593,8 @@ async def handle_menu(message: types.Message):
                         f"💠 Ценность: {card_value} _pts_",
                 parse_mode="Markdown"
             )
+
+
 
 
     
