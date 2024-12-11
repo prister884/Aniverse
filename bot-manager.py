@@ -10,8 +10,10 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 BOT_TOKEN = "8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo"
 bot_directory = "/root/Aniverse/"  # Path to the directory where your bot files are stored
 bot_script = "main.py"  # The main bot script
+manager_script = "bot-manager.py"
 git_repo_url = "https://github.com/prister884/Aniverse.git"  # GitHub repo URL
 tmux_session_name = "Aniverse"  # Name for the tmux session
+tmux_session_name_manager = "bot-manager"
 
 # Initialize bot and dispatcher with MemoryStorage
 storage = MemoryStorage()  # Initialize memory storage for temporary data
@@ -87,24 +89,26 @@ async def manage_update_bot(callback_query: types.CallbackQuery):
     await send_log("Bot has been updated!", callback_query)
 
 # Functions to start, stop, and update the bot
-def start_bot():
-    tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
+def start_bot(session, bot):
+    tmux_check = subprocess.run(f"tmux ls | grep {session}", shell=True, capture_output=True)
     if tmux_check.returncode == 0:  # If tmux session already exists
         return
-
+    
     # Start the bot inside tmux
-    tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot_script}'"
+    tmux_command = f"tmux new-session -d -s {session} 'python {bot_directory}/{bot}'"
     subprocess.run(tmux_command, shell=True)
 
-def stop_bot():
+def stop_bot(session):
     subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
 
 def update_bot():
-    stop_bot()  # Stop the bot first
+    stop_bot(tmux_session_name)  # Stop the bot first
+    stop_bot(tmux_session_name_manager)
     os.chdir(bot_directory)
     subprocess.run(["git", "pull"])  # Pull latest updates from GitHub
     subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-    start_bot()  # Restart the bot after the update
+    start_bot(tmux_session_name_manager,manager_script)  # Restart the bot after the update
+    start_bot(tmux_session_name,bot_script)
 
 # Run the bot
 if __name__ == "__main__":
