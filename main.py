@@ -953,21 +953,21 @@ async def show_card(callback_query: types.CallbackQuery):
     
     if 1 < page < len(cards[indices[card_type]]):
         keyboard.add(
-            InlineKeyboardButton(text="⬅️", callback_data="page_previous"),
+            InlineKeyboardButton(text="⬅️", callback_data="movepage_previous"),
             InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data="page_next")
+            InlineKeyboardButton(text="➡️", callback_data="movepage_next")
         )
 
     elif page == 1: 
         keyboard.add(
             InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data="page_next")
+            InlineKeyboardButton(text="➡️", callback_data="movepage_next")
         )
 
     elif page == len(cards[indices[card_type]]):
         keyboard.add(            
             InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="⬅️", callback_data="page_previous")
+            InlineKeyboardButton(text="⬅️", callback_data="movepage_previous")
         )
     
 
@@ -996,7 +996,7 @@ async def show_card(callback_query: types.CallbackQuery):
 
 @rate_limit(3)
 # Pagination handler for "page_next" and "page_previous"
-@dp.callback_query_handler(lambda c: c.data.startswith("page_"))
+@dp.callback_query_handler(lambda c: c.data.startswith("movepage_"))
 async def paginate_card(callback_query: types.CallbackQuery):
     # Extract the card type and current page from callback data
     user_id = callback_query.from_user.id
