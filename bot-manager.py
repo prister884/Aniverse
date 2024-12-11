@@ -62,10 +62,10 @@ async def start(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == "start_bot")
 async def manage_start_bot(callback_query: types.CallbackQuery):
     # Acknowledge the callback to prevent loading animation
-    await callback_query.answer("Starting the bot... HELLO")
+    await callback_query.answer("Starting the bot...")
 
     # Perform the actual operation
-    start_bot()
+    start_bot(tmux_session_name, bot_script)
     await send_log("Bot has been started!", callback_query)
 
 # Handle stop bot action
