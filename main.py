@@ -951,18 +951,23 @@ async def show_card(callback_query: types.CallbackQuery):
 
     keyboard = InlineKeyboardMarkup(row_width=3)
     
-    if page > 1:
+    if 1 < page < len(cards[indices[card_type]]):
         keyboard.add(
-            InlineKeyboardButton(text="⬅️", callback_data="page_previous")
+            InlineKeyboardButton(text="⬅️", callback_data="page_previous"),
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data="page_next")
         )
 
-    keyboard.add(
-        InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="something")
-    )
-
-    if page < len(cards[indices[card_type]]):
+    elif page == 1: 
         keyboard.add(
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
             InlineKeyboardButton(text="➡️", callback_data="page_next")
+        )
+
+    elif page == len(cards[indices[card_type]]):
+        keyboard.add(            
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+            InlineKeyboardButton(text="⬅️", callback_data="page_previous")
         )
     
 
@@ -989,6 +994,125 @@ async def show_card(callback_query: types.CallbackQuery):
             reply_markup=keyboard
         )
 
+@rate_limit(3)
+# Pagination handler for "page_next" and "page_previous"
+@dp.callback_query_handler(lambda c: c.data.startswith("page_"))
+async def paginate_card(callback_query: types.CallbackQuery):
+    # Extract the card type and current page from callback data
+    user_id = callback_query.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    
+    if not user_data:
+        await callback_query.answer("User data not found!", show_alert=True)
+        return
+
+    cards = user_data.get("cards", [[], [], [], [], []])
+    indices = {"casual": 0, "rare": 1, "epic": 2, "legendary": 3, "mythic": 4}
+
+    # Extract current rarity and page from callback data
+    current_message = callback_query.message
+    card_type = callback_query.message.caption.split("\n\n")[0].strip()  # Extract the rarity from the card caption
+    rarity_index = indices.get(card_type.lower())
+    type_cards = cards[rarity_index]
+
+    # Extract the next or previous action
+    action = callback_query.data.split("_")[1]
+
+    # Update the page based on action
+    current_page = int(current_message.reply_markup.inline_keyboard[0][1].text.split("/")[0])  # Current page from the button
+    if action == "next":
+        new_page = current_page + 1
+    elif action == "previous":
+        new_page = current_page - 1
+    else:
+        await callback_query.answer("Invalid pagination action!", show_alert=True)
+        return
+
+    # Ensure new_page is within bounds
+    if new_page < 1 or new_page > len(type_cards):
+        await callback_query.answer("Out of bounds!", show_alert=True)
+        return
+
+    # Get the current universe and retrieve the new card
+    universe = user_data.get("universe", "Не выбрана")
+    universes = {
+        "🪸 Ван пис": "onepiece_data",
+        "🍀 Чёрный клевер": "blackclever_data",
+        "🗡 Блич": "bleach_data",
+        "🍥 Наруто": "naruto_data",
+        "🎩 ДжоДжо": "jojo_data",
+        "🐜 Хантер × Хантер": "hunterxhunter_data",
+        "🥀 Токийский Гуль": "tokyog_data",
+        "👊 Ванпанчмен": "onepunchman_data",
+        "👺 Истребитель демонов": "demonslayer_data",
+        "🪚 Человек бензопила": "chainsawman_data",
+        "🍎 Повесть о конце света": "judgedaynotice_data",
+        "⚽️ Синяя тюрьма": "bluelock_data",
+        "🪄 Магическая битва": "magicfight_data",
+        "🧤 Моя геройская академия": "myheroacademy_data",
+        "🐷 Семь смертных грехов": "sevensins_data",
+        "⚔️ Берсерк": "berserk_data",
+        "🩻 Атака титанов": "titanattack_data",
+        "📓 Тетрадь смерти": "deathnote_data",
+        "🧚 Хвост феи": "fairytail_data",
+        "☀️ Сага о Винланде": "winlandsaga_data",
+        "⏱️ Токийские мстители": "tokyoavengers_data",
+        "🔮 Моб Психо 100": "mobpsycho100_data",
+        "⚾️ Покемон": "pokemon_data",
+        "☄️ Драгонболл": "dragonball_data",
+        "♟ Сололевелинг": "sololevelling_data",
+    }
+
+    collection_name = universes.get(universe)
+    if not collection_name:
+        await callback_query.answer("Universe not found!", show_alert=True)
+        return
+
+    card_data = db[collection_name].find_one({"id": type_cards[new_page - 1]})
+
+    # Build updated pagination keyboard
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    if new_page > 1:
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️", callback_data=f"page_previous"),
+        )
+    keyboard.add(
+        InlineKeyboardButton(text=f"{new_page}/{len(type_cards)}", callback_data="none")
+    )
+    if new_page < len(type_cards):
+        keyboard.add(
+            InlineKeyboardButton(text="➡️", callback_data=f"page_next"),
+        )
+
+    # Update the message with the new card details
+    if card_data["image_url"].endswith((".gif", ".mp4")):
+        await current_message.edit_media(
+            types.InputMediaAnimation(
+                media=card_data["image_url"],
+                caption=f"{card_data['name']}\n\n"
+                        f"⚜️ Редкость: {card_data['rarity']}\n"
+                        f"🗡️ Атака: {card_data['attack']}\n"
+                        f"❤️ Здоровье: {card_data['health']}\n\n"
+                        f"💠 Ценность: {card_data['value']} _pts_",
+                parse_mode="Markdown",
+            ),
+            reply_markup=keyboard,
+        )
+    else:
+        await current_message.edit_media(
+            types.InputMediaPhoto(
+                media=card_data["image_url"],
+                caption=f"{card_data['name']}\n\n"
+                        f"⚜️ Редкость: {card_data['rarity']}\n"
+                        f"🗡️ Атака: {card_data['attack']}\n"
+                        f"❤️ Здоровье: {card_data['health']}\n\n"
+                        f"💠 Ценность: {card_data['value']} _pts_",
+                parse_mode="Markdown",
+            ),
+            reply_markup=keyboard,
+        )
+
+    await callback_query.answer()
 
 @rate_limit(3)
 @dp.callback_query_handler(lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
