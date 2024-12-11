@@ -17,7 +17,7 @@ dp = Dispatcher(bot)
 # Function to send log messages to the Telegram bot
 async def send_log(message: str, callback_query: types.CallbackQuery):
     """Function to send log messages."""
-    await callback_query.message.answer(message,reply_markup=get_reply_keyboard())
+    await callback_query.message.answer(message, reply_markup=get_reply_keyboard())
 
 # Function to start the bot inside tmux
 def start_bot():
@@ -80,11 +80,12 @@ async def manage_update_bot(callback_query: types.CallbackQuery):
     update_bot()
     await send_log("Bot has been updated!", callback_query)
 
-# Handle terminal access (not functional yet)
+# Handle terminal access when user presses "Terminal" button
 @dp.message_handler(lambda message: message.text == "Terminal")
 async def terminal_access(message: types.Message):
-    # This is a placeholder for the terminal functionality, which can be added later
-    await message.answer("Terminal access is not functional yet.", reply_markup=get_reply_keyboard())
+    # Send the user a link to the terminal interface
+    terminal_url = "https://shell.ptud.live"
+    await message.answer(f"Click here to access the terminal: {terminal_url}", reply_markup=get_reply_keyboard())
 
 # Run the bot
 if __name__ == "__main__":
