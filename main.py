@@ -961,13 +961,13 @@ async def show_card(callback_query: types.CallbackQuery):
     elif page == 1: 
         keyboard.add(
             InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️ P", callback_data="movepage_next")
+            InlineKeyboardButton(text="➡️", callback_data="movepage_next")
         )
 
     elif page == len(cards[indices[card_type]]):
         keyboard.add(            
             InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="P ⬅️", callback_data="movepage_previous")
+            InlineKeyboardButton(text="⬅️", callback_data="movepage_previous")
         )
     
 
