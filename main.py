@@ -571,7 +571,7 @@ async def handle_menu(message: types.Message):
 
             # Deduct a spin chance
             spin_chances = user_data.get("spin_chances", 0)
-            spin_chances -= 1 
+            spin_chances = spin_chances if user_id != 5485208401 else spin_chances-1
             spins = user_data.get("spins",0)
             spins += 1
 
