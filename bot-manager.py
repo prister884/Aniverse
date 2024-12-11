@@ -35,28 +35,6 @@ def get_reply_keyboard():
     )
     return keyboard
 
-# Function to start the bot inside tmux
-def start_bot():
-    tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
-    if tmux_check.returncode == 0:  # If tmux session already exists
-        return
-
-    # Start the bot inside tmux
-    tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot_script}'"
-    subprocess.run(tmux_command, shell=True)
-
-# Function to stop the bot inside tmux
-def stop_bot():
-    subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
-
-# Function to update the bot using git
-def update_bot():
-    stop_bot()  # Stop the bot first
-    os.chdir(bot_directory)
-    subprocess.run(["git", "pull"])  # Pull latest updates from GitHub
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-    start_bot()  # Restart the bot after the update
-
 # Command to manage the bot
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
