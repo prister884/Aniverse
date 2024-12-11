@@ -105,10 +105,23 @@ def update_bot():
     stop_bot(tmux_session_name)  # Stop the bot first
     stop_bot(tmux_session_name_manager)
     os.chdir(bot_directory)
-    subprocess.run(["git", "pull"])  # Pull latest updates from GitHub
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-    start_bot(tmux_session_name_manager,manager_script)  # Restart the bot after the update
-    start_bot(tmux_session_name,bot_script)
+
+    # Fetch changes from the remote repository
+    subprocess.run(["git", "fetch"], capture_output=True)
+    
+    # Check for changes between local and remote
+    result = subprocess.run(
+        ["git", "status", "-uno"], capture_output=True, text=True
+    )
+    if "Your branch is behind" in result.stdout:
+        # Pull latest updates from GitHub if the local branch is behind
+        subprocess.run(["git", "pull"])
+        subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
+        start_bot(tmux_session_name_manager, manager_script)  # Restart the bot manager
+        start_bot(tmux_session_name, bot_script)  # Restart the bot
+        print("Bot updated and restarted successfully.")
+    else:
+        print("No updates available. Bot is already up-to-date.")
 
 # Run the bot
 if __name__ == "__main__":
