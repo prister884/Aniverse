@@ -727,9 +727,9 @@ async def handle_menu(message: types.Message):
                         if card_rarity == "Обычная":
                             db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные+1}})
                         elif card_rarity == "Редкая":
-                            db.users.update_one({"user_id":user_id},{"$set":{"редкие":обычные+1}})
+                            db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие+1}})
                         else:
-                            db.users.update_one({"user_id":user_id},{"$set":{"эпические":обычные+1}})
+                            db.users.update_one({"user_id":user_id},{"$set":{"эпические":эпические+1}})
 
                         db.users.update_one({"user_id":user_id},{"$set": {"seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 

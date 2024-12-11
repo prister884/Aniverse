@@ -1,0 +1,12 @@
+.venv/*
+screenshots/*
+parsed_data.py
+parseimg.py
+textimg.py
+tokyog.py
+test.py
+bleach.py
+converter.py
+pokemon.py
+test.py
+init.py

@@ -49,7 +49,7 @@ db = client.aniverse_db  # Use your database name
 # print("Success")
 
 for element in tokyog:
-    db.tokyog_data.insert_one({
+    db.bleach_data.insert_one({
         "id": element["id"],
         "name": element["name"],
         "rarity": element["rarity"],
