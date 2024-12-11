@@ -16,83 +16,62 @@ tmux_session_name = "Aniverse"  # tmux session name for the bot
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
-# Send log updates to the user
-async def send_log(callback_query, message):
-    try:
-        await callback_query.answer(message)
-    except Exception as e:
-        await callback_query.answer(f"❌ Error: {str(e)}")
+# Function to send logs to Telegram
+async def send_log(message: str, callback_query: types.CallbackQuery):
+    """Function to send log messages."""
+    await callback_query.answer(message)
 
-# Start Bot function using tmux
-def start_bot(callback_query):
-    # Check if tmux session already exists
+# Function to start the bot inside tmux
+def start_bot():
     tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
-    if tmux_check.returncode == 0:  # If session exists
+    if tmux_check.returncode == 0:  # If tmux session exists
         return
 
-    # Start the bot in a tmux session
+    # Start the bot in tmux
     tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot_script}'"
     subprocess.run(tmux_command, shell=True)
 
-    # Notify the user
-    send_log(callback_query, "Bot has been started in tmux session.")
-
-# Stop Bot function using tmux
-def stop_bot(callback_query):
-    # Kill the tmux session
+# Function to stop the bot in tmux
+def stop_bot():
     subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
-    
-    # Notify the user
-    send_log(callback_query, "Bot has been stopped.")
 
-# Update Bot function using git and tmux
-def update_bot(callback_query):
-    # Notify user before starting the update
-    send_log(callback_query, "Updating bot...")
-
-    # Stop the bot before updating
-    stop_bot(callback_query)
-
-    # Go to the bot directory and update from GitHub
+# Function to update the bot using git
+def update_bot():
+    stop_bot()  # Stop the bot first
     os.chdir(bot_directory)
-    subprocess.run(["git", "pull"])
+    subprocess.run(["git", "pull"])  # Update the bot from GitHub
+    subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new requirements
+    start_bot()  # Restart the bot after updating
 
-    # Reinstall the virtual environment (if applicable)
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])
-
-    # Start the bot again
-    start_bot(callback_query)
-
-# Bot command for managing the bot
+# Command to manage the bot
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
-    # Create an inline keyboard with bot management options
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton(text="Start Bot", callback_data="start_bot"),
         InlineKeyboardButton(text="Stop Bot", callback_data="stop_bot"),
         InlineKeyboardButton(text="Update Bot", callback_data="update_bot")
     )
-
-    # Send a message with the management options
     await message.answer("Choose an option to manage the bot:", reply_markup=keyboard)
 
-# Callback query handler for bot management
+# Handle start bot action
 @dp.callback_query_handler(lambda c: c.data == "start_bot")
 async def manage_start_bot(callback_query: types.CallbackQuery):
-    start_bot(callback_query)
-    await callback_query.answer("Bot has been started!")
+    start_bot()
+    await send_log("Bot has been started!", callback_query)
 
+# Handle stop bot action
 @dp.callback_query_handler(lambda c: c.data == "stop_bot")
 async def manage_stop_bot(callback_query: types.CallbackQuery):
-    stop_bot(callback_query)
-    await callback_query.answer("Bot has been stopped!")
+    stop_bot()
+    await send_log("Bot has been stopped!", callback_query)
 
+# Handle update bot action
 @dp.callback_query_handler(lambda c: c.data == "update_bot")
 async def manage_update_bot(callback_query: types.CallbackQuery):
-    update_bot(callback_query)
-    await callback_query.answer("Bot has been updated!")
+    update_bot()
+    await send_log("Bot has been updated!", callback_query)
 
-# Main entry point for the bot
+# Run the bot
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
