@@ -1012,7 +1012,7 @@ async def paginate_card(callback_query: types.CallbackQuery):
     # Extract current rarity and page from callback data
     current_message = callback_query.message
     card_type = callback_query.message.caption.split("\n\n⚜️ Редкость:")[0].strip()  # Extract the rarity from the card caption
-    rarity_index = indices.get(card_type.lower())
+    rarity_index = indices[card_type.lower()]
     type_cards = cards[rarity_index]
 
     # Extract the next or previous action
@@ -1064,10 +1064,6 @@ async def paginate_card(callback_query: types.CallbackQuery):
     }
 
     collection_name = universes.get(universe)
-    if not collection_name:
-        await callback_query.answer("Universe not found!", show_alert=True)
-        return
-
     card_data = db[collection_name].find_one({"id": type_cards[new_page - 1]})
 
     # Build updated pagination keyboard
