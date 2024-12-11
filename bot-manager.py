@@ -26,11 +26,12 @@ async def send_log(message: str, callback_query: types.CallbackQuery):
     """Function to send log messages."""
     await callback_query.message.answer(message, reply_markup=get_reply_keyboard())
 
-# Create a reply keyboard with the terminal button
+# Create a reply keyboard with the terminal button and cancel button
 def get_reply_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(
-        KeyboardButton(text="Terminal")  # Terminal button under the message bar
+        KeyboardButton(text="Terminal"),  # Terminal button under the message bar
+        KeyboardButton(text="Cancel")  # Cancel button to stop terminal session
     )
     return keyboard
 
@@ -78,6 +79,13 @@ async def terminal_access(message: types.Message):
     # Temporarily store the user ID to handle the message later
     await dp.storage.set_data(user=message.from_user.id, data={'waiting_for_command': True})
 
+# Handle cancel session when user presses "Cancel"
+@dp.message_handler(lambda message: message.text == "Cancel")
+async def cancel_terminal(message: types.Message):
+    # Cancel the terminal session and reset the state
+    await dp.storage.set_data(user=message.from_user.id, data={'waiting_for_command': False})
+    await message.answer("Terminal session has been canceled.", reply_markup=get_reply_keyboard())
+
 # Handle receiving the command from the user
 @dp.message_handler(lambda message: True)
 async def execute_command(message: types.Message):
@@ -99,6 +107,7 @@ async def execute_command(message: types.Message):
 
             # Send the output to the user in Telegram
             await message.answer(f"Command executed successfully:\n{output}")
+
         except Exception as e:
             await message.answer(f"An error occurred: {e}")
 
