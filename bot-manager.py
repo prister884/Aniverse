@@ -17,7 +17,7 @@ dp = Dispatcher(bot)
 # Function to send log messages to the Telegram bot
 async def send_log(message: str, callback_query: types.CallbackQuery):
     """Function to send log messages."""
-    await callback_query.answer(message,reply_markup=get_reply_keyboard())
+    await callback_query.message.answer(message,reply_markup=get_reply_keyboard())
 
 # Function to start the bot inside tmux
 def start_bot():
