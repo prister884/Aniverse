@@ -3,6 +3,8 @@ import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 # Bot setup
 BOT_TOKEN = "8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo"
@@ -11,8 +13,12 @@ bot_script = "main.py"  # The main bot script
 git_repo_url = "https://github.com/prister884/Aniverse.git"  # GitHub repo URL
 tmux_session_name = "Aniverse"  # Name for the tmux session
 
+# Initialize bot and dispatcher with MemoryStorage
+storage = MemoryStorage()  # Initialize memory storage for temporary data
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=storage)  # Link storage to the dispatcher
+
+dp.middleware.setup(LoggingMiddleware())  # Enable logging middleware to capture errors and logs
 
 # Function to send log messages to the Telegram bot
 async def send_log(message: str, callback_query: types.CallbackQuery):
@@ -26,6 +32,28 @@ def get_reply_keyboard():
         KeyboardButton(text="Terminal")  # Terminal button under the message bar
     )
     return keyboard
+
+# Function to start the bot inside tmux
+def start_bot():
+    tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
+    if tmux_check.returncode == 0:  # If tmux session already exists
+        return
+
+    # Start the bot inside tmux
+    tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot_script}'"
+    subprocess.run(tmux_command, shell=True)
+
+# Function to stop the bot inside tmux
+def stop_bot():
+    subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
+
+# Function to update the bot using git
+def update_bot():
+    stop_bot()  # Stop the bot first
+    os.chdir(bot_directory)
+    subprocess.run(["git", "pull"])  # Pull latest updates from GitHub
+    subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
+    start_bot()  # Restart the bot after the update
 
 # Command to manage the bot
 @dp.message_handler(commands=["start"])
@@ -46,7 +74,6 @@ async def terminal_access(message: types.Message):
     # Ask user to enter the command to be executed in tmux
     await message.answer("Please enter the commands to be executed:")
 
-    # Set the user's state to "waiting for command" (this step can be managed using FSM if necessary)
     # Temporarily store the user ID to handle the message later
     await dp.storage.set_data(user=message.from_user.id, data={'waiting_for_command': True})
 
@@ -76,6 +103,36 @@ async def execute_command(message: types.Message):
 
         # After executing, reset the state
         await dp.storage.set_data(user=user_id, data={'waiting_for_command': False})
+
+# Handle start bot action
+@dp.callback_query_handler(lambda c: c.data == "start_bot")
+async def manage_start_bot(callback_query: types.CallbackQuery):
+    # Acknowledge the callback to prevent loading animation
+    await callback_query.answer("Starting the bot...")
+
+    # Perform the actual operation
+    start_bot()
+    await callback_query.message.answer("Bot has been started!")
+
+# Handle stop bot action
+@dp.callback_query_handler(lambda c: c.data == "stop_bot")
+async def manage_stop_bot(callback_query: types.CallbackQuery):
+    # Acknowledge the callback to prevent loading animation
+    await callback_query.answer("Stopping the bot...")
+
+    # Perform the actual operation
+    stop_bot()
+    await callback_query.message.answer("Bot has been stopped!")
+
+# Handle update bot action
+@dp.callback_query_handler(lambda c: c.data == "update_bot")
+async def manage_update_bot(callback_query: types.CallbackQuery):
+    # Acknowledge the callback to prevent loading animation
+    await callback_query.answer("Updating the bot...")
+
+    # Perform the actual operation
+    update_bot()
+    await callback_query.message.answer("Bot has been updated!")
 
 # Run the bot
 if __name__ == "__main__":
