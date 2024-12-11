@@ -746,7 +746,7 @@ async def handle_menu(message: types.Message):
             await message.answer(
                 f"🃏🙅‍♂ [{nickname}](tg://user?id={user_id}), получать карточки можно раз в 4 часа. Приходи через:\n"
                 f"➖➖➖➖➖➖\n"
-                f"⏳ {remaining_hours}ч. {remaining_minutes}м. {remaining_seconds}",
+                f"⏳ {remaining_hours}ч. {remaining_minutes}м. {remaining_seconds}с",
                 parse_mode="Markdown"
             )
 
