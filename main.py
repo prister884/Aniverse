@@ -9,6 +9,41 @@ import locale
 import random
 from aiogram.types import InputFile
 import time
+import asyncio
+from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.utils.exceptions import Throttled
+from functools import wraps
+
+
+class ThrottlingMiddleware(BaseMiddleware):
+    def __init__(self, default_rate_limit=1):
+        super(ThrottlingMiddleware, self).__init__()
+        self.default_rate_limit = default_rate_limit
+        self.cache = {}
+
+    async def on_pre_process_message(self, message: types.Message, data: dict):
+        user_id = message.from_user.id
+        handler = data.get("handler")
+        handler_name = handler.__name__ if handler else "global"
+        rate_limit = getattr(handler, "rate_limit", self.default_rate_limit)
+        current_time = asyncio.get_event_loop().time()
+
+        # Throttling logic
+        user_cache = self.cache.setdefault(user_id, {})
+        if handler_name in user_cache and current_time < user_cache[handler_name] + rate_limit:
+            remaining_time = round(user_cache[handler_name] + rate_limit - current_time, 2)
+            raise Throttled
+        user_cache[handler_name] = current_time
+
+def rate_limit(limit=1):
+    """
+    Rate limit decorator for handlers.
+    """
+    def decorator(func):
+        func.rate_limit = limit
+        return func
+    return decorator
+
 
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
@@ -24,7 +59,7 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 
-
+dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
 
 # Main Menu Keyboard
 def get_main_keyboard():
@@ -52,6 +87,7 @@ def get_welcome_buttons():
     
     return keyboard
     
+@rate_limit(1)
 # Handle Start Command
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
@@ -127,6 +163,7 @@ async def start(message: types.Message):
         )
 
 
+@rate_limit(1)
 @dp.message_handler(commands=["leave"])
 async def leave_account(message: types.Message):
     user_id = message.from_user.id
@@ -146,6 +183,7 @@ async def leave_account(message: types.Message):
     )
 
 
+@rate_limit(1)
 @dp.callback_query_handler(lambda c: c.data.startswith("back_to_"))
 async def back_to(callback_query: types.CallbackQuery):
     """
@@ -153,7 +191,6 @@ async def back_to(callback_query: types.CallbackQuery):
     The function dynamically checks the callback data and navigates to the appropriate screen.
     """
     # Acknowledge the callback to prevent the Telegram "waiting" state
-
 
 
     await callback_query.answer()
@@ -172,18 +209,19 @@ async def back_to(callback_query: types.CallbackQuery):
     verse_data = db.universes.find_one({"name":universe})
     user_data = db.users.find_one({"user_id": user_id})
 
-    casual_count = user_data.get("casual", 0)
-    rare_count = user_data.get("rare", 0)
-    epic_count = user_data.get("epic", 0)
-    legendary_count = user_data.get("legendary", 0)
-    mythic_count = user_data.get("mythic", 0)
-
     maximum = verse_data.get("maximum", [])
     maximum_casual = maximum[1]
     maximum_rare = maximum[2]
     maximum_epic = maximum[3]
     maximum_legendary = maximum[4]
     maximum_mythic = maximum[5]
+    
+    casual_cards = len(cards[0])
+    rare_cards = len(cards[1])
+    epic_cards = len(cards[2])
+    legendary_cards = len(cards[3])
+    mythic_cards = len(cards[4])
+    card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
 
     # Extract the type of the back action from the callback data
     back_type = callback_query.data.split("_", 2)[2]  # Extract the part after "back_to_"
@@ -231,44 +269,48 @@ async def back_to(callback_query: types.CallbackQuery):
 
     elif back_type == "menu":
 
+        # Handle "Меню"
+        
         keyboard = InlineKeyboardMarkup(row_width=2)
 
+        # First row
         keyboard.add(
             InlineKeyboardButton(text="🔑 Pass", callback_data="pass"),
             InlineKeyboardButton(text="🏆 Рейтинг", callback_data="rating"),
         )
+
+        # Second row
         keyboard.add(
             InlineKeyboardButton(text="🔮 Магазин", callback_data="shop"),
             InlineKeyboardButton(text="♻️ Крафт", callback_data="craft")
         )
+
+        # Third row
         keyboard.add(
             InlineKeyboardButton(text="⛺️ Кланы", callback_data="clans"),
             InlineKeyboardButton(text="🏟 Арена", callback_data="arena")
         )
+
+        # Fourth row
         keyboard.add(
             InlineKeyboardButton(text="🌙 Задания", callback_data="tasks"),
             InlineKeyboardButton(text="🔗 Рефералка", callback_data="referral")
         )
+        
+        # Fifth row
+        
         keyboard.add(
-            InlineKeyboardButton(text="🗺️ Сменить вселенную", callback_data="change_universe")
+            InlineKeyboardButton(text="🗺️ Сменить вселенную", callback_data="change_universe")   
         )
+        
         keyboard.add(
             InlineKeyboardButton(text="🎁 Бонусы за Крутки", callback_data="spin_bonuses")
         )
+        
+        universe_cut = universe.split(" ", 1)[1] if universe != "Не выбрана" else universe
+        
+        cards_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
 
-        universe_cut = universe.split(" ", 1)[1]
-
-        cards_count = casual_count+rare_count+epic_count+legendary_count+mythic_count
-
-        await callback_query.message.edit_text(
-            f"👤 Нuк: [{nickname}](tg://user?id={user_id}) \n"
-            f"🗺️ Вселенная: {universe_cut} \n"
-            f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
-            f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
-            f"💰 Коины: {coins} 🪙", 
-            parse_mode="Markdown",
-            reply_markup=keyboard
-        )
 
         await callback_query.message.edit_text(
             f"👤 Ник: [{nickname}](tg://user?id={user_id}) \n"
@@ -327,6 +369,7 @@ async def back_to(callback_query: types.CallbackQuery):
 
 
 
+@rate_limit(1)
 # Handle Choose Universe
 @dp.callback_query_handler(lambda c: c.data == "choose_universe")
 async def choose_universe(callback_query: types.CallbackQuery):
@@ -344,6 +387,7 @@ async def choose_universe(callback_query: types.CallbackQuery):
         reply_markup=get_universe_keyboard(page=1)
     )
 
+@rate_limit(1)
 # Handle Paginate Universes
 @dp.callback_query_handler(lambda c: c.data.startswith("page_"))
 async def paginate_universes(callback_query: types.CallbackQuery):
@@ -353,6 +397,7 @@ async def paginate_universes(callback_query: types.CallbackQuery):
         reply_markup=get_universe_keyboard(page=page)
     )
 
+@rate_limit(1)
 @dp.callback_query_handler(lambda c: c.data.startswith("universe_"))
 async def select_universe(callback_query: types.CallbackQuery):
     """
@@ -430,6 +475,7 @@ def get_universe_keyboard(page=1):
 
 
 
+@rate_limit(1)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def change_nickname(message: types.Message):
     """
@@ -463,6 +509,7 @@ async def change_nickname(message: types.Message):
         await handle_menu(message)
 
 
+@rate_limit(1)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def handle_menu(message: types.Message):
     """
@@ -525,9 +572,11 @@ async def handle_menu(message: types.Message):
             # Deduct a spin chance
             spin_chances = user_data.get("spin_chances", 0)
             spin_chances -= 1 
+            spins = user_data.get("spins",0)
+            spins += 1
 
             # Update the spin chances in the database
-            db.users.update_one({"user_id": user_id}, {"$set": {"spin_chances": spin_chances, "last_drop":current_time}})
+            db.users.update_one({"user_id": user_id}, {"$set": {"spin_chances": spin_chances, "last_drop":current_time, "spins":spins}})
 
 
             if user_data:
@@ -611,7 +660,7 @@ async def handle_menu(message: types.Message):
                         cards[4].append(random_number)
 
 
-                    db.users.update_one({"user_id":user_id},{"$set": {"cards":cards, "seasonal_points":seasonal_points+card_value}})
+                    db.users.update_one({"user_id":user_id},{"$set": {"cards":cards, "seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 
                     # Handle "Получить карту"
                     if card_img_url.endswith((".gif", ".mp4")):
@@ -642,7 +691,7 @@ async def handle_menu(message: types.Message):
                         осколки = user_data.get("осколки",0)
                         osk_added = random.randint(40,51)
 
-                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value}})
+                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 
                         await message.answer_animation(
                             open(card_img_url, "rb"),
@@ -658,7 +707,7 @@ async def handle_menu(message: types.Message):
                         осколки = user_data.get("осколки",0)
                         osk_added = random.randint(10,31)
 
-                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value}})
+                        db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 
                         await message.answer_photo(
                             card_img_url,
@@ -682,7 +731,7 @@ async def handle_menu(message: types.Message):
                         else:
                             db.users.update_one({"user_id":user_id},{"$set":{"эпические":обычные+1}})
 
-                        db.users.update_one({"user_id":user_id},{"$set": {"seasonal_points":seasonal_points+card_value}})
+                        db.users.update_one({"user_id":user_id},{"$set": {"seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 
                         await message.answer_photo(
                             card_img_url,
@@ -824,7 +873,124 @@ async def handle_menu(message: types.Message):
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
 
+@dp.callback_query_handler(lambda c: c.data.startswith("show_"))
+async def show_card(callback_query: types.CallbackQuery):
 
+    indices = {"casual":0,"rare":1,"epic":2,"legendary":3,"mythic":4}
+    card_type = callback_query.data.split("_")[1]
+    rarities = {"casual":"Обычный","rare":"Редкий","epic":"Эпический","legendary":"Легендарный","mythic":"Мифический",}
+
+    page = 1   
+
+    user_id = callback_query.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    universe = user_data.get("universe", "Не выбрана")
+    cards = user_data.get("cards", [[],[],[],[],[]])
+    verse_data = db.universes.find_one({"name":universe})
+    user_data = db.users.find_one({"user_id": user_id})
+
+    casual_cards = len(cards[0])
+    rare_cards = len(cards[1])
+    epic_cards = len(cards[2])
+    legendary_cards = len(cards[3])
+    mythic_cards = len(cards[4])
+    card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
+
+    maximum = verse_data.get("maximum", [])
+    maximum_casual = maximum[1]
+    maximum_rare = maximum[2]
+    maximum_epic = maximum[3]
+    maximum_legendary = maximum[4]
+    maximum_mythic = maximum[5]
+
+    universes = {        
+        "🪸 Ван пис":"onepiece_data",
+        "🍀 Чёрный клевер":"blackclever_data",
+        "🗡 Блич":"bleach_data",
+        "🍥 Наруто":"naruto_data",
+        "🎩 ДжоДжо":"jojo_data",
+        "🐜 Хантер × Хантер":"hunterxhunter_data",
+        "🥀 Токийский Гуль":"tokyog_data",
+        "👊 Ванпанчмен":"onepunchman_data",
+        "👺 Истребитель демонов":"demonslayer_data",
+        "🪚 Человек бензопила":"chainsawman_data",
+        "🍎 Повесть о конце света":"judgedaynotice_data",
+        "⚽️ Синяя тюрьма":"bluelock_data",
+        "🪄 Магическая битва":"magicfight_data",
+        "🧤 Моя геройская академия":"myheroacademy_data",
+        "🐷 Семь смертных грехов":"sevensins_data",
+        "⚔️ Берсерк":"berserk_data",
+        "🩻 Атака титанов":"titanattack_data",
+        "📓 Тетрадь смерти":"deathnote_data",
+        "🧚 Хвост феи":"fairytail_data",
+        "☀️ Сага о Винланде":"winlandsaga_data",
+        "⏱️ Токийские мстители":"tokyoavengers_data",
+        "🔮 Моб Психо 100":"mobpsycho100_data",
+        "⚾️ Покемон":"pokemon_data",
+        "☄️ Драгонболл":"dragonball_data",
+        "♟ Сололевелинг":"sololevelling_data"
+    }
+
+    
+    cards = user_data.get("cards",[[],[],[],[],[]])
+
+    type_cards = cards[indices[card_type]]
+
+    # Validate the universe exists
+    if universe in universes:
+        collection_name = universes[universe]  # Get the corresponding collection name   
+        card_data = db[collection_name].find_one({"id":type_cards[page-1]})
+
+    card_name = card_data.get("name")
+    card_rarity = card_data.get("rarity")
+    card_attack = card_data.get("attack")
+    card_health = card_data.get("health")
+    card_value = card_data.get("value")
+    card_img_url = card_data.get("image_url")
+
+
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    
+    if page > 1:
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️", callback_data="page_previous")
+        )
+
+    keyboard.add(
+        InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="something")
+    )
+
+    if page < len(cards[indices[card_type]]):
+        keyboard.add(
+            InlineKeyboardButton(text="➡️", callback_data="page_next")
+        )
+    
+
+    if card_img_url.endswith((".gif", ".mp4")):
+        await callback_query.message.answer_animation(
+            open(card_img_url, "rb"),
+            caption=f"{card_name}\n\n"
+                    f"⚜️ Редкость: {card_rarity}\n"
+                    f"🗡️ Атака: {card_attack}\n"
+                    f"❤️ Здоровье: {card_health}\n\n"
+                    f"💠 Ценность: {card_value} _pts_",
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+    else:  # Assume it's an image
+        await callback_query.message.answer_photo(
+            card_img_url,
+            caption=f"{card_name}\n\n"
+                    f"⚜️ Редкость: {card_rarity}\n"
+                    f"🗡️ Атака: {card_attack}\n"
+                    f"❤️ Здоровье: {card_health}\n\n"
+                    f"💠 Ценность: {card_value} _pts_",
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
+
+
+@rate_limit(3)
 @dp.callback_query_handler(lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
 async def process_callback(callback_query: types.CallbackQuery):
     action = callback_query.data
@@ -949,6 +1115,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         )
         
 
+@rate_limit(5)
 @dp.callback_query_handler(lambda c: c.data.startswith("claim_spins"))
 async def claim_spins(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
@@ -1020,7 +1187,8 @@ async def claim_spins(callback_query: types.CallbackQuery):
     # If no rewards available
     await callback_query.answer(f"❌ {nickname}, у тебя недостаточно круток, чтобы получить награду.")
 
-        
+       
+@rate_limit(5) 
 @dp.callback_query_handler(lambda c: c.data.startswith("payment_page_"))
 async def payment_page_aniverse(callback_query: types.CallbackQuery):
     """
@@ -1059,6 +1227,7 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
     )
 
 
+@rate_limit(5)
 @dp.callback_query_handler(lambda c: c.data.startswith("alternative_payment_"))
 async def alternative_payment(callback_query: types.CallbackQuery):
 
