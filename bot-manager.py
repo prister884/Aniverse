@@ -62,7 +62,7 @@ async def start(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == "start_bot")
 async def manage_start_bot(callback_query: types.CallbackQuery):
     # Acknowledge the callback to prevent loading animation
-    await callback_query.answer("Starting the bot...")
+    await callback_query.answer("Starting the bot... HELLO")
 
     # Perform the actual operation
     start_bot()
