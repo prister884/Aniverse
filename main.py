@@ -1003,15 +1003,15 @@ async def paginate_card(callback_query: types.CallbackQuery):
     user_data = db.users.find_one({"user_id": user_id})
     
     if not user_data:
-        await callback_query.answer("User data not found!", show_alert=True)
+        await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
         return
 
     cards = user_data.get("cards", [[], [], [], [], []])
-    indices = {"casual": 0, "rare": 1, "epic": 2, "legendary": 3, "mythic": 4}
+    indices = {"обычная": 0, "редкая": 1, "эпическая": 2, "легендарная": 3, "мифическая": 4}
 
     # Extract current rarity and page from callback data
     current_message = callback_query.message
-    card_type = callback_query.message.caption.split("\n\n")[0].strip()  # Extract the rarity from the card caption
+    card_type = callback_query.message.caption.split("\n\n⚜️ Редкость:")[0].strip()  # Extract the rarity from the card caption
     rarity_index = indices.get(card_type.lower())
     type_cards = cards[rarity_index]
 
