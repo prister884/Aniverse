@@ -1184,9 +1184,6 @@ async def claim_spins(callback_query: types.CallbackQuery):
             await callback_query.answer(f"⭐️ {nickname}, ты уже получил награду за выполненные задания.")
             
 
-    # If no rewards available
-    await callback_query.answer(f"❌ {nickname}, у тебя недостаточно круток, чтобы получить награду.")
-
        
 @rate_limit(5) 
 @dp.callback_query_handler(lambda c: c.data.startswith("payment_page_"))
