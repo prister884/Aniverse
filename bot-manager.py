@@ -12,6 +12,7 @@ bot_directory = "/root/Aniverse/"  # Path to the directory where your bot files 
 bot_script = "main.py"  # The main bot script
 git_repo_url = "https://github.com/prister884/Aniverse.git"  # GitHub repo URL
 tmux_session_name = "Aniverse"  # Name for the tmux session
+tmux_console_session = "console"  # Name for the tmux console session (for terminal commands)
 
 # Initialize bot and dispatcher with MemoryStorage
 storage = MemoryStorage()  # Initialize memory storage for temporary data
@@ -87,14 +88,14 @@ async def execute_command(message: types.Message):
     if data.get('waiting_for_command', False):
         command = message.text  # The command entered by the user
 
-        # Execute the command in tmux
+        # Execute the command in the "console" tmux session
         try:
-            # Start a new tmux session to run the command
-            tmux_command = f"tmux new-session -d 'echo \"{command}\" | bash'"
+            # Start a new tmux session to run the command in the console tmux session
+            tmux_command = f"tmux new-session -d -s {tmux_console_session} 'echo \"{command}\" | bash'"
             subprocess.run(tmux_command, shell=True)
 
             # Capture output from tmux (you can redirect tmux output to a file or capture it directly)
-            output = subprocess.check_output(f"tmux capture-pane -p -t {tmux_session_name}", shell=True).decode()
+            output = subprocess.check_output(f"tmux capture-pane -p -t {tmux_console_session}", shell=True).decode()
 
             # Send the output to the user in Telegram
             await message.answer(f"Command executed successfully:\n{output}")
