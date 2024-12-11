@@ -119,6 +119,7 @@ def update_bot():
         subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
         start_bot(tmux_session_name_manager, manager_script)  # Restart the bot manager
         start_bot(tmux_session_name, bot_script)  # Restart the bot
+        print("Auto-updated your branch")
 
 # Run the bot
 if __name__ == "__main__":
