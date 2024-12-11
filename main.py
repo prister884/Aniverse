@@ -1109,7 +1109,7 @@ async def process_callback(callback_query: types.CallbackQuery):
             rewards_message,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(row_width=1).add(
-                InlineKeyboardButton("🎁 Забрать награду", callback_data="claim_spins"),
+                InlineKeyboardButton("🎁 Собрать награду", callback_data="claim_spins"),
                 InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu")
             )
         )
@@ -1145,6 +1145,7 @@ async def claim_spins(callback_query: types.CallbackQuery):
     ]
 
     # Iterate through thresholds to check eligibility
+
     for entry in thresholds:
         threshold = entry["threshold"]
         reward_spins = entry["reward_spins"]
