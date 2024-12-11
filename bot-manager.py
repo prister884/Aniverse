@@ -17,7 +17,7 @@ dp = Dispatcher(bot)
 # Function to send log messages to the Telegram bot
 async def send_log(message: str, callback_query: types.CallbackQuery):
     """Function to send log messages."""
-    await callback_query.answer(message)
+    await callback_query.answer(message,reply_markup=get_reply_keyboard())
 
 # Function to start the bot inside tmux
 def start_bot():
@@ -66,19 +66,19 @@ async def start(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == "start_bot")
 async def manage_start_bot(callback_query: types.CallbackQuery):
     start_bot()
-    await send_log("Bot has been started!", callback_query, reply_markup = get_reply_keyboard())
+    await send_log("Bot has been started!", callback_query)
 
 # Handle stop bot action
 @dp.callback_query_handler(lambda c: c.data == "stop_bot")
 async def manage_stop_bot(callback_query: types.CallbackQuery):
     stop_bot()
-    await send_log("Bot has been stopped!", callback_query, reply_markup = get_reply_keyboard())
+    await send_log("Bot has been stopped!", callback_query)
 
 # Handle update bot action
 @dp.callback_query_handler(lambda c: c.data == "update_bot")
 async def manage_update_bot(callback_query: types.CallbackQuery):
     update_bot()
-    await send_log("Bot has been updated!", callback_query, reply_markup = get_reply_keyboard())
+    await send_log("Bot has been updated!", callback_query)
 
 # Handle terminal access (not functional yet)
 @dp.message_handler(lambda message: message.text == "Terminal")
