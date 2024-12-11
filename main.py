@@ -705,7 +705,7 @@ async def handle_menu(message: types.Message):
                     elif card_rarity == "Легендарная":
 
                         осколки = user_data.get("осколки",0)
-                        osk_added = random.randint(10,31)
+                        osk_added = random.randint(10,21)
 
                         db.users.update_one({"user_id":user_id},{"$set": {"осколки":осколки+osk_added,"seasonal_points":seasonal_points+card_value, "coins":coins+card_value}})
 
