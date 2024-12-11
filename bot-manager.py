@@ -19,28 +19,6 @@ async def send_log(message: str, callback_query: types.CallbackQuery):
     """Function to send log messages."""
     await callback_query.message.answer(message, reply_markup=get_reply_keyboard())
 
-# Function to start the bot inside tmux
-def start_bot():
-    tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
-    if tmux_check.returncode == 0:  # If tmux session already exists
-        return
-
-    # Start the bot inside tmux
-    tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot_script}'"
-    subprocess.run(tmux_command, shell=True)
-
-# Function to stop the bot inside tmux
-def stop_bot():
-    subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
-
-# Function to update the bot using git
-def update_bot():
-    stop_bot()  # Stop the bot first
-    os.chdir(bot_directory)
-    subprocess.run(["git", "pull"])  # Pull latest updates from GitHub
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-    start_bot()  # Restart the bot after the update
-
 # Create a reply keyboard with the terminal button
 def get_reply_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -62,30 +40,42 @@ async def start(message: types.Message):
     # Send a message with the management options and reply keyboard
     await message.answer("Choose an option to manage the bot:", reply_markup=keyboard)
 
-# Handle start bot action
-@dp.callback_query_handler(lambda c: c.data == "start_bot")
-async def manage_start_bot(callback_query: types.CallbackQuery):
-    start_bot()
-    await send_log("Bot has been started!", callback_query)
-
-# Handle stop bot action
-@dp.callback_query_handler(lambda c: c.data == "stop_bot")
-async def manage_stop_bot(callback_query: types.CallbackQuery):
-    stop_bot()
-    await send_log("Bot has been stopped!", callback_query)
-
-# Handle update bot action
-@dp.callback_query_handler(lambda c: c.data == "update_bot")
-async def manage_update_bot(callback_query: types.CallbackQuery):
-    update_bot()
-    await send_log("Bot has been updated!", callback_query)
-
 # Handle terminal access when user presses "Terminal" button
 @dp.message_handler(lambda message: message.text == "Terminal")
 async def terminal_access(message: types.Message):
-    # Send the user a link to the terminal interface
-    terminal_url = "https://shell.ptud.live"
-    await message.answer(f"Click here to access the terminal: {terminal_url}", reply_markup=get_reply_keyboard())
+    # Ask user to enter the command to be executed in tmux
+    await message.answer("Please enter the commands to be executed:")
+
+    # Set the user's state to "waiting for command" (this step can be managed using FSM if necessary)
+    # Temporarily store the user ID to handle the message later
+    await dp.storage.set_data(user=message.from_user.id, data={'waiting_for_command': True})
+
+# Handle receiving the command from the user
+@dp.message_handler(lambda message: True)
+async def execute_command(message: types.Message):
+    user_id = message.from_user.id
+
+    # Check if the user is in the state of "waiting for command"
+    data = await dp.storage.get_data(user=user_id)
+    if data.get('waiting_for_command', False):
+        command = message.text  # The command entered by the user
+
+        # Execute the command in tmux
+        try:
+            # Start a new tmux session to run the command
+            tmux_command = f"tmux new-session -d 'echo \"{command}\" | bash'"
+            subprocess.run(tmux_command, shell=True)
+
+            # Capture output from tmux (you can redirect tmux output to a file or capture it directly)
+            output = subprocess.check_output(f"tmux capture-pane -p -t {tmux_session_name}", shell=True).decode()
+
+            # Send the output to the user in Telegram
+            await message.answer(f"Command executed successfully:\n{output}")
+        except Exception as e:
+            await message.answer(f"An error occurred: {e}")
+
+        # After executing, reset the state
+        await dp.storage.set_data(user=user_id, data={'waiting_for_command': False})
 
 # Run the bot
 if __name__ == "__main__":
