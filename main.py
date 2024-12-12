@@ -961,13 +961,13 @@ async def process_callback(callback_query: types.CallbackQuery):
             InlineKeyboardButton(text="Скрафтить из 🐉", callback_data="craft_epic"),
             InlineKeyboardButton(text="Скрафтить из 🀄️", callback_data="craft_osk"),
         )
-        
+
         craftboard.add(
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
         )
 
 
-        await callback_query.message.answer(
+        await callback_query.message.edit_text(
             f"🍙 [{nickname}](tg://user?id={user_id}), ты можешь скрафтить попытки из повторок и осколков\n\n"
             f"🌀 Твои повторки и осколки\n"
             f"┏⚡️ Обычные - {обычные}\n"
