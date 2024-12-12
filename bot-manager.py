@@ -63,7 +63,7 @@ async def manage_start_bot(callback_query: types.CallbackQuery):
     await callback_query.answer("Starting the bot...")
 
     # Perform the actual operation
-    start_bot(tmux_session_name, bot_script)
+    start_bot()
     await send_log("Bot has been started!", callback_query)
 
 # Handle stop bot action
