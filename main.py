@@ -1077,7 +1077,7 @@ async def paginate_card(callback_query: types.CallbackQuery):
 
     # Extract current rarity and page from callback data
     current_message = callback_query.message
-    type_cards = cards[indices[rarities[card_type]]]
+    type_cards = cards[indices[rarities.get(card_type)]]
 
     # Extract the next or previous action
     page_id = callback_query.data.split("_")[1]
