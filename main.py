@@ -533,18 +533,29 @@ async def change_nickname(message: types.Message):
 @dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
 async def activate(message: types.Message):
 
-    user_id = message.from_user.id
-    admins = list(db.admins.find())  # Convert the cursor to a list
+    @rate_limit(1)
+@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
+async def activate(message: types.Message):
 
+    user_id = message.from_user.id
+    # Fetch admins as a list and count the total number of admins
+    admins = list(db.admins.find())  # Convert the cursor to a list
+    num_admins = len(admins)
+
+    # Check if the user ID is already an admin
+    user_is_admin = any(admin['user_id'] == user_id for admin in admins)
+
+    # Create inline buttons
     admin_key = InlineKeyboardMarkup(row_width=2).add(
         InlineKeyboardButton(text="Панель", callback_data="admin"),
         InlineKeyboardButton(text="Уволиться", callback_data="retire")
     )
 
-    # Check if the message text is "/admin_activate"
+    # Check if the message is the admin activation command
     if message.text == "/admin_activate":
-        # Check if user_id is in admins and if there are less than 3 admins
-        if any(admin['user_id'] == user_id for admin in admins) and len(admins) < 3:
+        if not user_is_admin and num_admins < 3:
+            # If the user is not an admin and there are less than 3 admins, activate the user
+            db.admins.insert_one({"user_id": user_id})  # Assuming user is added to the admins collection
             await message.answer(
                 f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n"
                 f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
@@ -552,6 +563,7 @@ async def activate(message: types.Message):
                 parse_mode="Markdown"
             )
         else:
+            # If the user is already an admin, send this message
             await message.answer(
                 f"🤬 Не надо долбить, у тебя уже есть админ.",
                 reply_markup=admin_key,
