@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Replace with your management bot token
-MANAGEMENT_BOT_TOKEN = 'YOUR_MANAGEMENT_BOT_TOKEN'
+MANAGEMENT_BOT_TOKEN = '8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo'
 
 # Target bot details
 TARGET_BOT_DIRECTORY = '/root/Aniverse'
