@@ -474,6 +474,34 @@ def get_universe_keyboard(page=1):
     return keyboard
 
 
+universes = {
+    "🪸 Ван пис": "onepiece_data",
+    "🍀 Чёрный клевер": "blackclever_data",
+    "🗡 Блич": "bleach_data",
+    "🍥 Наруто": "naruto_data",
+    "🎩 ДжоДжо": "jojo_data",
+    "🐜 Хантер × Хантер": "hunterxhunter_data",
+    "🥀 Токийский Гуль": "tokyog_data",
+    "👊 Ванпанчмен": "onepunchman_data",
+    "👺 Истребитель демонов": "demonslayer_data",
+    "🪚 Человек бензопила": "chainsawman_data",
+    "🍎 Повесть о конце света": "judgedaynotice_data",
+    "⚽️ Синяя тюрьма": "bluelock_data",
+    "🪄 Магическая битва": "magicfight_data",
+    "🧤 Моя геройская академия": "myheroacademy_data",
+    "🐷 Семь смертных грехов": "sevensins_data",
+    "⚔️ Берсерк": "berserk_data",
+    "🩻 Атака титанов": "titanattack_data",
+    "📓 Тетрадь смерти": "deathnote_data",
+    "🧚 Хвост феи": "fairytail_data",
+    "☀️ Сага о Винланде": "winlandsaga_data",
+    "⏱️ Токийские мстители": "tokyoavengers_data",
+    "🔮 Моб Психо 100": "mobpsycho100_data",
+    "⚾️ Покемон": "pokemon_data",
+    "☄️ Драгонболл": "dragonball_data",
+    "♟ Сололевелинг": "sololevelling_data",
+}
+
 
 @rate_limit(1)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
@@ -599,34 +627,6 @@ async def handle_menu(message: types.Message):
                         weights.append(0.3)  # Quarter of the probability of the previous range
                 
                 random_number = random.choices(numbers, weights=weights, k=1)[0]
-
-                universes = {        
-                    "🪸 Ван пис":"onepiece_data",
-                    "🍀 Чёрный клевер":"blackclever_data",
-                    "🗡 Блич":"bleach_data",
-                    "🍥 Наруто":"naruto_data",
-                    "🎩 ДжоДжо":"jojo_data",
-                    "🐜 Хантер × Хантер":"hunterxhunter_data",
-                    "🥀 Токийский Гуль":"tokyog_data",
-                    "👊 Ванпанчмен":"onepunchman_data",
-                    "👺 Истребитель демонов":"demonslayer_data",
-                    "🪚 Человек бензопила":"chainsawman_data",
-                    "🍎 Повесть о конце света":"judgedaynotice_data",
-                    "⚽️ Синяя тюрьма":"bluelock_data",
-                    "🪄 Магическая битва":"magicfight_data",
-                    "🧤 Моя геройская академия":"myheroacademy_data",
-                    "🐷 Семь смертных грехов":"sevensins_data",
-                    "⚔️ Берсерк":"berserk_data",
-                    "🩻 Атака титанов":"titanattack_data",
-                    "📓 Тетрадь смерти":"deathnote_data",
-                    "🧚 Хвост феи":"fairytail_data",
-                    "☀️ Сага о Винланде":"winlandsaga_data",
-                    "⏱️ Токийские мстители":"tokyoavengers_data",
-                    "🔮 Моб Психо 100":"mobpsycho100_data",
-                    "⚾️ Покемон":"pokemon_data",
-                    "☄️ Драгонболл":"dragonball_data",
-                    "♟ Сололевелинг":"sololevelling_data"
-                }
 
                 # Validate the universe exists
                 if universe in universes:
@@ -873,305 +873,161 @@ async def handle_menu(message: types.Message):
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
 
+
 @dp.callback_query_handler(lambda c: c.data.startswith("show_"))
 async def show_card(callback_query: types.CallbackQuery):
 
     indices = {"casual":0,"rare":1,"epic":2,"legendary":3,"mythic":4}
     rarities = {"casual":"Обычный","rare":"Редкий","epic":"Эпический","legendary":"Легендарный","mythic":"Мифический",}
-
-    page = 1   
-
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
     universe = user_data.get("universe", "Не выбрана")
-    cards = user_data.get("cards", [[],[],[],[],[]])
-    verse_data = db.universes.find_one({"name":universe})
-    user_data = db.users.find_one({"user_id": user_id})
-
-    casual_cards = len(cards[0])
-    rare_cards = len(cards[1])
-    epic_cards = len(cards[2])
-    legendary_cards = len(cards[3])
-    mythic_cards = len(cards[4])
-    card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
-
-    maximum = verse_data.get("maximum", [])
-    cards = user_data.get("cards",[[],[],[],[],[]])
-    flattened_cards = [item for sublist in cards for item in sublist]
-
-    universes = {        
-        "🪸 Ван пис":"onepiece_data",
-        "🍀 Чёрный клевер":"blackclever_data",
-        "🗡 Блич":"bleach_data",
-        "🍥 Наруто":"naruto_data",
-        "🎩 ДжоДжо":"jojo_data",
-        "🐜 Хантер × Хантер":"hunterxhunter_data",
-        "🥀 Токийский Гуль":"tokyog_data",
-        "👊 Ванпанчмен":"onepunchman_data",
-        "👺 Истребитель демонов":"demonslayer_data",
-        "🪚 Человек бензопила":"chainsawman_data",
-        "🍎 Повесть о конце света":"judgedaynotice_data",
-        "⚽️ Синяя тюрьма":"bluelock_data",
-        "🪄 Магическая битва":"magicfight_data",
-        "🧤 Моя геройская академия":"myheroacademy_data",
-        "🐷 Семь смертных грехов":"sevensins_data",
-        "⚔️ Берсерк":"berserk_data",
-        "🩻 Атака титанов":"titanattack_data",
-        "📓 Тетрадь смерти":"deathnote_data",
-        "🧚 Хвост феи":"fairytail_data",
-        "☀️ Сага о Винланде":"winlandsaga_data",
-        "⏱️ Токийские мстители":"tokyoavengers_data",
-        "🔮 Моб Психо 100":"mobpsycho100_data",
-        "⚾️ Покемон":"pokemon_data",
-        "☄️ Драгонболл":"dragonball_data",
-        "♟ Сололевелинг":"sololevelling_data"
-    }
-
-    
+    cards = user_data.get("cards", [[], [], [], [], []])
     card_type = callback_query.data.split("_")[1]
 
-    if card_type == "all":
+    # Get the index of the card type in the rarity order
+    type_index = indices[card_type]
+    type_cards = cards[type_index]
 
-        # Validate the universe exists
-        if universe in universes:
-            collection_name = universes[universe]  # Get the corresponding collection name   
-            card_data = db[collection_name].find_one({"id":flattened_cards[page-1]})
+    # Validate the universe exists
+    if universe in universes:
+        collection_name = universes[universe]
 
-        card_name = card_data.get("name")
-        card_rarity = card_data.get("rarity")
-        card_attack = card_data.get("attack")
-        card_health = card_data.get("health")
-        card_value = card_data.get("value")
-        card_img_url = card_data.get("image_url")
+    # Get the current page from the callback data
+    page = int(callback_query.data.split("_")[2])
 
+    # Get the card data from the database
+    card_data = db[collection_name].find_one({"id": type_cards[page - 1]})
 
-        keyboard = InlineKeyboardMarkup(row_width=3)
-        
-        if 1 < page < len(cards[indices[card_type]]):
-            keyboard.add(
-                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{flattened_cards[page-2]}_{page}_{card_type}"),
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{flattened_cards[page]}_{page}_{card_type}")
-            )
+    # Extract card information
+    card_name = card_data.get("name")
+    card_rarity = card_data.get("rarity")
+    card_attack = card_data.get("attack")
+    card_health = card_data.get("health")
+    card_value = card_data.get("value")
+    card_img_url = card_data.get("image_url")
 
-        elif page == 1: 
-            keyboard.add(
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{flattened_cards[page]}_{page}_{card_type}")
-            )
+    # Create the keyboard
+    keyboard = InlineKeyboardMarkup(row_width=3)
+    if 1 < page < len(type_cards):
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page - 2]}_{page}_{card_type}"),
+            InlineKeyboardButton(text=f"{page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+        )
+    elif page == 1:
+        keyboard.add(
+            InlineKeyboardButton(text=f"{page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+        )
+    elif page == len(type_cards):
+        keyboard.add(
+            InlineKeyboardButton(text=f"{page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page - 2]}_{page}_{card_type}")
+        )
 
-        elif page == len(cards[indices[card_type]]):
-            keyboard.add(            
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{flattened_cards[page-2]}_{page}_{card_type}")
-            )
-        
-
-        if card_img_url.endswith((".gif", ".mp4")):
-            await callback_query.message.answer_animation(
-                open(card_img_url, "rb"),
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
-
-        else:  # Assume it's an image
-            await callback_query.message.answer_photo(
-                card_img_url,
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
-
+    # Send the card information and image
+    if card_img_url.endswith((".gif", ".mp4")):
+        await callback_query.message.answer_animation(
+            open(card_img_url, "rb"),
+            caption=f"{card_name}\n\n"
+                    f"⚜️ Редкость: {card_rarity}\n"
+                    f"🗡️ Атака: {card_attack}\n"
+                    f"❤️ Здоровье: {card_health}\n\n"
+                    f"💠 Ценность: {card_value} _pts_",
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
     else:
-
-        type_cards = cards[indices[card_type]]
-
-        # Validate the universe exists
-        if universe in universes:
-            collection_name = universes[universe]  # Get the corresponding collection name   
-            card_data = db[collection_name].find_one({"id":type_cards[page-1]})
-
-        card_name = card_data.get("name")
-        card_rarity = card_data.get("rarity")
-        card_attack = card_data.get("attack")
-        card_health = card_data.get("health")
-        card_value = card_data.get("value")
-        card_img_url = card_data.get("image_url")
-
-
-        keyboard = InlineKeyboardMarkup(row_width=3)
-        
-        if 1 < page < len(cards[indices[card_type]]):
-            keyboard.add(
-                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}"),
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}_{page}_{card_type}", callback_data="none"),
-                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
-            )
-
-        elif page == 1: 
-            keyboard.add(
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
-            )
-
-        elif page == len(cards[indices[card_type]]):
-            keyboard.add(            
-                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}")
-            )
-        
-
-        if card_img_url.endswith((".gif", ".mp4")):
-            await callback_query.message.answer_animation(
-                open(card_img_url, "rb"),
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
-        else:  # Assume it's an image
-            await callback_query.message.answer_photo(
-                card_img_url,
-                caption=f"{card_name}\n\n"
-                        f"⚜️ Редкость: {card_rarity}\n"
-                        f"🗡️ Атака: {card_attack}\n"
-                        f"❤️ Здоровье: {card_health}\n\n"
-                        f"💠 Ценность: {card_value} _pts_",
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
+        await callback_query.message.answer_photo(
+            card_img_url,
+            caption=f"{card_name}\n\n"
+                    f"⚜️ Редкость: {card_rarity}\n"
+                    f"🗡️ Атака: {card_attack}\n"
+                    f"❤️ Здоровье: {card_health}\n\n"
+                    f"💠 Ценность: {card_value} _pts_",
+            parse_mode="Markdown",
+            reply_markup=keyboard
+        )
 
 @rate_limit(3)
-# Pagination handler for "page_next" and "page_previous"
 @dp.callback_query_handler(lambda c: c.data.startswith("movepage_"))
 async def paginate_card(callback_query: types.CallbackQuery):
-    # Extract the card type and current page from callback data
+
+    indices = {"casual":0,"rare":1,"epic":2,"legendary":3,"mythic":4}
+
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
-    
-    rarities = {"casual":"обычная","rare":"редкая","epic":"эпическая","legendary":"легендарная","mythic":"мифическая",}
-    
-    if not user_data:
-        await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
-        return
-
     cards = user_data.get("cards", [[], [], [], [], []])
-    indices = {"обычная": 0, "редкая": 1, "эпическая": 2, "легендарная": 3, "мифическая": 4}
-
-    page = callback_query.data.split("_")[2]
     card_type = callback_query.data.split("_")[3]
 
-    print(card_type)
+    # Get the index of the card type in the rarity order
+    type_index = indices[card_type]
+    type_cards = cards[type_index]
 
-    # Extract current rarity and page from callback data
-    current_message = callback_query.message
-    type_cards = cards[indices[rarities.get(card_type)]]
+    # Extract the current page and the target card ID
+    current_page = int(callback_query.data.split("_")[2])
+    target_card_id = callback_query.data.split("_")[1]
 
-    # Extract the next or previous action
-    page_id = callback_query.data.split("_")[1]
+    # Calculate the new page based on the target card ID
+    new_page = type_cards.index(target_card_id) + 1
 
-    # Update the page based on action
-    # current_page = int(current_message.reply_markup.inline_keyboard[0][1].text.split("/")[0])
-
-    # Get the current universe and retrieve the new card
+    # Get the universe and collection name
     universe = user_data.get("universe", "Не выбрана")
-    universes = {
-        "🪸 Ван пис": "onepiece_data",
-        "🍀 Чёрный клевер": "blackclever_data",
-        "🗡 Блич": "bleach_data",
-        "🍥 Наруто": "naruto_data",
-        "🎩 ДжоДжо": "jojo_data",
-        "🐜 Хантер × Хантер": "hunterxhunter_data",
-        "🥀 Токийский Гуль": "tokyog_data",
-        "👊 Ванпанчмен": "onepunchman_data",
-        "👺 Истребитель демонов": "demonslayer_data",
-        "🪚 Человек бензопила": "chainsawman_data",
-        "🍎 Повесть о конце света": "judgedaynotice_data",
-        "⚽️ Синяя тюрьма": "bluelock_data",
-        "🪄 Магическая битва": "magicfight_data",
-        "🧤 Моя геройская академия": "myheroacademy_data",
-        "🐷 Семь смертных грехов": "sevensins_data",
-        "⚔️ Берсерк": "berserk_data",
-        "🩻 Атака титанов": "titanattack_data",
-        "📓 Тетрадь смерти": "deathnote_data",
-        "🧚 Хвост феи": "fairytail_data",
-        "☀️ Сага о Винланде": "winlandsaga_data",
-        "⏱️ Токийские мстители": "tokyoavengers_data",
-        "🔮 Моб Психо 100": "mobpsycho100_data",
-        "⚾️ Покемон": "pokemon_data",
-        "☄️ Драгонболл": "dragonball_data",
-        "♟ Сололевелинг": "sololevelling_data",
-    }
-
     collection_name = universes.get(universe)
-    card_data = db[collection_name].find_one({"id": type_cards[page_id]})
 
-    page += 1
+    # Get the new card data
+    new_card_data = db[collection_name].find_one({"id": target_card_id})
 
-    # Build updated pagination keyboard
+    # Create the keyboard
     keyboard = InlineKeyboardMarkup(row_width=3)
-    if 1 < page < len(cards[indices[card_type]]):
+    if 1 < new_page < len(type_cards):
         keyboard.add(
-            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}"),
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}_{page}_{card_type}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[new_page - 2]}_{new_page}_{card_type}"),
+            InlineKeyboardButton(text=f"{new_page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[new_page]}_{new_page}_{card_type}")
         )
-
-    elif page == 1: 
+    elif new_page == 1:
         keyboard.add(
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+            InlineKeyboardButton(text=f"{new_page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[new_page]}_{new_page}_{card_type}")
+        )
+    elif new_page == len(type_cards):
+        keyboard.add(
+            InlineKeyboardButton(text=f"{new_page}/{len(type_cards)}", callback_data="none"),
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[new_page - 2]}_{new_page}_{card_type}")
         )
 
-    elif page == len(cards[indices[card_type]]):
-        keyboard.add(            
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}")
-        )
-
-    # Update the message with the new card details
-    if card_data["image_url"].endswith((".gif", ".mp4")):
-        await current_message.edit_media(
+    # Update the message with the new card information
+    if new_card_data["image_url"].endswith((".gif", ".mp4")):
+        await callback_query.message.edit_media(
             types.InputMediaAnimation(
-                media=card_data["image_url"],
-                caption=f"{card_data['name']}\n\n"
-                        f"⚜️ Редкость: {card_data['rarity']}\n"
-                        f"🗡️ Атака: {card_data['attack']}\n"
-                        f"❤️ Здоровье: {card_data['health']}\n\n"
-                        f"💠 Ценность: {card_data['value']} _pts_",
+                media=new_card_data["image_url"],
+                caption=f"{new_card_data['name']}\n\n"
+                        f"⚜️ Редкость: {new_card_data['rarity']}\n"
+                        f"🗡️ Атака: {new_card_data['attack']}\n"
+                        f"❤️ Здоровье: {new_card_data['health']}\n\n"
+                        f"💠 Ценность: {new_card_data['value']} _pts_",
                 parse_mode="Markdown",
             ),
             reply_markup=keyboard,
         )
     else:
-        await current_message.edit_media(
+        await callback_query.message.edit_media(
             types.InputMediaPhoto(
-                media=card_data["image_url"],
-                caption=f"{card_data['name']}\n\n"
-                        f"⚜️ Редкость: {card_data['rarity']}\n"
-                        f"🗡️ Атака: {card_data['attack']}\n"
-                        f"❤️ Здоровье: {card_data['health']}\n\n"
-                        f"💠 Ценность: {card_data['value']} _pts_",
+                media=new_card_data["image_url"],
+                caption=f"{new_card_data['name']}\n\n"
+                        f"⚜️ Редкость: {new_card_data['rarity']}\n"
+                        f"🗡️ Атака: {new_card_data['attack']}\n"
+                        f"❤️ Здоровье: {new_card_data['health']}\n\n"
+                        f"💠 Ценность: {new_card_data['value']} _pts_",
                 parse_mode="Markdown",
             ),
             reply_markup=keyboard,
         )
 
     await callback_query.answer()
-
-@rate_limit(3)
+@rate_limit(2)
 @dp.callback_query_handler(lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
 async def process_callback(callback_query: types.CallbackQuery):
     action = callback_query.data
@@ -1296,7 +1152,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         )
         
 
-@rate_limit(5)
+@rate_limit(10)
 @dp.callback_query_handler(lambda c: c.data.startswith("claim_spins"))
 async def claim_spins(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
@@ -1367,7 +1223,7 @@ async def claim_spins(callback_query: types.CallbackQuery):
             
 
        
-@rate_limit(5) 
+@rate_limit(10) 
 @dp.callback_query_handler(lambda c: c.data.startswith("payment_page_"))
 async def payment_page_aniverse(callback_query: types.CallbackQuery):
     """
@@ -1406,7 +1262,7 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
     )
 
 
-@rate_limit(5)
+@rate_limit(10)
 @dp.callback_query_handler(lambda c: c.data.startswith("alternative_payment_"))
 async def alternative_payment(callback_query: types.CallbackQuery):
 
