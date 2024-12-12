@@ -63,7 +63,8 @@ dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
 
 # Main Menu Keyboard
 def get_main_keyboard():
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     keyboard.add(
         KeyboardButton("🥡 Получить карту"),
         KeyboardButton("🃏 Мои карты")
@@ -72,6 +73,14 @@ def get_main_keyboard():
         KeyboardButton("☁ Меню"),
         KeyboardButton("⚙ Настройки")
     )
+
+    admin_data = db.admins.find_one({"user_id":5485208401})
+
+    if admin_data:
+        keyboard.add(
+            KeyboardButton("😎 Админ")
+        )
+        
     return keyboard
 
 # Inline Keyboard for Welcome Screen
@@ -527,41 +536,6 @@ async def change_nickname(message: types.Message):
     # Continue with other menu options if "Сменить ник" is not detected
     else:
         await handle_menu(message)
-
-@rate_limit(1)
-@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
-async def activate(message: types.Message):
-    user_id = message.from_user.id
-    # Fetch admins as a list and count the total number of admins
-    admins = list(db.admins.find())  # Convert the cursor to a list
-    num_admins = len(admins)
-
-    # Check if the user ID is already an admin
-    user_is_admin = any(admin['user_id'] == user_id for admin in admins)
-
-    # Create inline buttons
-    admin_key = InlineKeyboardMarkup(row_width=2).add(
-        InlineKeyboardButton(text="Панель", callback_data="admin"),
-        InlineKeyboardButton(text="Уволиться", callback_data="retire")
-    )
-
-    if not user_is_admin and num_admins < 3:
-        # If the user is not an admin and there are less than 3 admins, activate the user
-        db.admins.insert_one({"user_id": user_id})  # Add the user to the admins collection
-        await message.answer(
-            f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n"
-            f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
-            reply_markup=admin_key,
-            parse_mode="Markdown"
-        )
-    else:
-        # If the user is already an admin or there are 3 or more admins, send this message
-        await message.answer(
-            f"🤬 Не надо долбить, у тебя уже есть админ.",
-            reply_markup=admin_key,
-            parse_mode="Markdown"
-        )
-
 
 
 @rate_limit(1)
