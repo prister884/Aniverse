@@ -1,10 +1,10 @@
 import logging
 import subprocess
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackContext
 
 # Replace with your management bot token
-MANAGEMENT_BOT_TOKEN = '8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo'
+MANAGEMENT_BOT_TOKEN = 'YOUR_MANAGEMENT_BOT_TOKEN'
 
 # Target bot details
 TARGET_BOT_DIRECTORY = '/root/Aniverse'
@@ -61,25 +61,21 @@ def unknown_command(update: Update, context: CallbackContext):
     update.message.reply_text("Unknown command. Available commands: /start, /stop, /restart, /update, /status")
 
 def main():
-    # Create the Updater and pass it the bot's token
-    updater = Updater(MANAGEMENT_BOT_TOKEN)
-
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
+    # Create the Application and pass it the bot's token
+    application = Application.builder().token(MANAGEMENT_BOT_TOKEN).build()
 
     # Add command handlers
-    dispatcher.add_handler(CommandHandler('start', start_bot))
-    dispatcher.add_handler(CommandHandler('stop', stop_bot))
-    dispatcher.add_handler(CommandHandler('restart', restart_bot))
-    dispatcher.add_handler(CommandHandler('update', update_bot))
-    dispatcher.add_handler(CommandHandler('status', status_bot))
+    application.add_handler(CommandHandler('start', start_bot))
+    application.add_handler(CommandHandler('stop', stop_bot))
+    application.add_handler(CommandHandler('restart', restart_bot))
+    application.add_handler(CommandHandler('update', update_bot))
+    application.add_handler(CommandHandler('status', status_bot))
 
     # Handle unknown commands
-    dispatcher.add_handler(CommandHandler('unknown', unknown_command))
+    application.add_handler(CommandHandler('unknown', unknown_command))
 
     # Start the Bot
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
