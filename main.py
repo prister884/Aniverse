@@ -530,32 +530,34 @@ async def change_nickname(message: types.Message):
 
 
 @rate_limit(1)
-@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote", ])
+@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
 async def activate(message: types.Message):
 
     user_id = message.from_user.id
-    admins = db.admins.find()
+    admins = list(db.admins.find())  # Convert the cursor to a list
 
     admin_key = InlineKeyboardMarkup(row_width=2).add(
         InlineKeyboardButton(text="Панель", callback_data="admin"),
         InlineKeyboardButton(text="Уволиться", callback_data="retire")
     )
 
+    # Check if the message text is "/admin_activate"
     if message.text == "/admin_activate":
-        if user_id in admins and len(admins)<3:
+        # Check if user_id is in admins and if there are less than 3 admins
+        if any(admin['user_id'] == user_id for admin in admins) and len(admins) < 3:
             await message.answer(
-                f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n",
+                f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n"
                 f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
                 reply_markup=admin_key,
                 parse_mode="Markdown"
             )
-
-        else: 
+        else:
             await message.answer(
                 f"🤬 Не надо долбить, у тебя уже есть админ.",
                 reply_markup=admin_key,
                 parse_mode="Markdown"
             )
+
 
 @rate_limit(1)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
