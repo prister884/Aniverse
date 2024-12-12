@@ -1061,7 +1061,7 @@ async def paginate_card(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
     
-    rarities = {"casual":"Обычный","rare":"Редкий","epic":"Эпический","legendary":"Легендарный","mythic":"Мифический",}
+    rarities = {"casual":"обычная","rare":"редкая","epic":"эпическая","legendary":"легендарная","mythic":"мифическая",}
     
     if not user_data:
         await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
