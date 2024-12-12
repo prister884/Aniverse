@@ -877,7 +877,6 @@ async def handle_menu(message: types.Message):
 async def show_card(callback_query: types.CallbackQuery):
 
     indices = {"casual":0,"rare":1,"epic":2,"legendary":3,"mythic":4}
-    card_type = callback_query.data.split("_")[1]
     rarities = {"casual":"Обычный","rare":"Редкий","epic":"Эпический","legendary":"Легендарный","mythic":"Мифический",}
 
     page = 1   
@@ -897,11 +896,8 @@ async def show_card(callback_query: types.CallbackQuery):
     card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
 
     maximum = verse_data.get("maximum", [])
-    maximum_casual = maximum[1]
-    maximum_rare = maximum[2]
-    maximum_epic = maximum[3]
-    maximum_legendary = maximum[4]
-    maximum_mythic = maximum[5]
+    cards = user_data.get("cards",[[],[],[],[],[]])
+    flattened_cards = [item for sublist in cards for item in sublist]
 
     universes = {        
         "🪸 Ван пис":"onepiece_data",
@@ -932,67 +928,130 @@ async def show_card(callback_query: types.CallbackQuery):
     }
 
     
-    cards = user_data.get("cards",[[],[],[],[],[]])
+    card_type = callback_query.data.split("_")[1]
 
-    type_cards = cards[indices[card_type]]
+    if card_type == "all":
 
-    # Validate the universe exists
-    if universe in universes:
-        collection_name = universes[universe]  # Get the corresponding collection name   
-        card_data = db[collection_name].find_one({"id":type_cards[page-1]})
+        # Validate the universe exists
+        if universe in universes:
+            collection_name = universes[universe]  # Get the corresponding collection name   
+            card_data = db[collection_name].find_one({"id":flattened_cards[page-1]})
 
-    card_name = card_data.get("name")
-    card_rarity = card_data.get("rarity")
-    card_attack = card_data.get("attack")
-    card_health = card_data.get("health")
-    card_value = card_data.get("value")
-    card_img_url = card_data.get("image_url")
+        card_name = card_data.get("name")
+        card_rarity = card_data.get("rarity")
+        card_attack = card_data.get("attack")
+        card_health = card_data.get("health")
+        card_value = card_data.get("value")
+        card_img_url = card_data.get("image_url")
 
 
-    keyboard = InlineKeyboardMarkup(row_width=3)
-    
-    if 1 < page < len(cards[indices[card_type]]):
-        keyboard.add(
-            InlineKeyboardButton(text="⬅️", callback_data="movepage_previous"),
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data="movepage_next")
-        )
+        keyboard = InlineKeyboardMarkup(row_width=3)
+        
+        if 1 < page < len(cards[indices[card_type]]):
+            keyboard.add(
+                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{flattened_cards[page-2]}_{page}_{card_type}"),
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{flattened_cards[page]}_{page}_{card_type}")
+            )
 
-    elif page == 1: 
-        keyboard.add(
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="➡️", callback_data="movepage_next")
-        )
+        elif page == 1: 
+            keyboard.add(
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{flattened_cards[page]}_{page}_{card_type}")
+            )
 
-    elif page == len(cards[indices[card_type]]):
-        keyboard.add(            
-            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
-            InlineKeyboardButton(text="⬅️", callback_data="movepage_previous")
-        )
-    
+        elif page == len(cards[indices[card_type]]):
+            keyboard.add(            
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{flattened_cards[page-2]}_{page}_{card_type}")
+            )
+        
 
-    if card_img_url.endswith((".gif", ".mp4")):
-        await callback_query.message.answer_animation(
-            open(card_img_url, "rb"),
-            caption=f"{card_name}\n\n"
-                    f"⚜️ Редкость: {card_rarity}\n"
-                    f"🗡️ Атака: {card_attack}\n"
-                    f"❤️ Здоровье: {card_health}\n\n"
-                    f"💠 Ценность: {card_value} _pts_",
-            parse_mode="Markdown",
-            reply_markup=keyboard
-        )
-    else:  # Assume it's an image
-        await callback_query.message.answer_photo(
-            card_img_url,
-            caption=f"{card_name}\n\n"
-                    f"⚜️ Редкость: {card_rarity}\n"
-                    f"🗡️ Атака: {card_attack}\n"
-                    f"❤️ Здоровье: {card_health}\n\n"
-                    f"💠 Ценность: {card_value} _pts_",
-            parse_mode="Markdown",
-            reply_markup=keyboard
-        )
+        if card_img_url.endswith((".gif", ".mp4")):
+            await callback_query.message.answer_animation(
+                open(card_img_url, "rb"),
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown",
+                reply_markup=keyboard
+            )
+
+        else:  # Assume it's an image
+            await callback_query.message.answer_photo(
+                card_img_url,
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown",
+                reply_markup=keyboard
+            )
+
+    else:
+
+        type_cards = cards[indices[card_type]]
+
+        # Validate the universe exists
+        if universe in universes:
+            collection_name = universes[universe]  # Get the corresponding collection name   
+            card_data = db[collection_name].find_one({"id":type_cards[page-1]})
+
+        card_name = card_data.get("name")
+        card_rarity = card_data.get("rarity")
+        card_attack = card_data.get("attack")
+        card_health = card_data.get("health")
+        card_value = card_data.get("value")
+        card_img_url = card_data.get("image_url")
+
+
+        keyboard = InlineKeyboardMarkup(row_width=3)
+        
+        if 1 < page < len(cards[indices[card_type]]):
+            keyboard.add(
+                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}"),
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}_{page}_{card_type}", callback_data="none"),
+                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+            )
+
+        elif page == 1: 
+            keyboard.add(
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+                InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+            )
+
+        elif page == len(cards[indices[card_type]]):
+            keyboard.add(            
+                InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+                InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}")
+            )
+        
+
+        if card_img_url.endswith((".gif", ".mp4")):
+            await callback_query.message.answer_animation(
+                open(card_img_url, "rb"),
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown",
+                reply_markup=keyboard
+            )
+        else:  # Assume it's an image
+            await callback_query.message.answer_photo(
+                card_img_url,
+                caption=f"{card_name}\n\n"
+                        f"⚜️ Редкость: {card_rarity}\n"
+                        f"🗡️ Атака: {card_attack}\n"
+                        f"❤️ Здоровье: {card_health}\n\n"
+                        f"💠 Ценность: {card_value} _pts_",
+                parse_mode="Markdown",
+                reply_markup=keyboard
+            )
 
 @rate_limit(3)
 # Pagination handler for "page_next" and "page_previous"
@@ -1002,6 +1061,8 @@ async def paginate_card(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
     
+    rarities = {"casual":"Обычный","rare":"Редкий","epic":"Эпический","legendary":"Легендарный","mythic":"Мифический",}
+    
     if not user_data:
         await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
         return
@@ -1009,29 +1070,20 @@ async def paginate_card(callback_query: types.CallbackQuery):
     cards = user_data.get("cards", [[], [], [], [], []])
     indices = {"обычная": 0, "редкая": 1, "эпическая": 2, "легендарная": 3, "мифическая": 4}
 
+    page = callback_query.data.split("_")[2]
+    card_type = callback_query.data.split("_")[3]
+
+    print(card_type)
+
     # Extract current rarity and page from callback data
     current_message = callback_query.message
-    card_type = callback_query.message.caption.split("\n\n⚜️ Редкость:")[0].strip()  # Extract the rarity from the card caption
-    rarity_index = indices[card_type.lower()]
-    type_cards = cards[rarity_index]
+    type_cards = cards[indices[rarities[card_type]]]
 
     # Extract the next or previous action
-    action = callback_query.data.split("_")[1]
+    page_id = callback_query.data.split("_")[1]
 
     # Update the page based on action
-    current_page = int(current_message.reply_markup.inline_keyboard[0][1].text.split("/")[0])  # Current page from the button
-    if action == "next":
-        new_page = current_page + 1
-    elif action == "previous":
-        new_page = current_page - 1
-    else:
-        await callback_query.answer("Invalid pagination action!", show_alert=True)
-        return
-
-    # Ensure new_page is within bounds
-    if new_page < 1 or new_page > len(type_cards):
-        await callback_query.answer("Out of bounds!", show_alert=True)
-        return
+    # current_page = int(current_message.reply_markup.inline_keyboard[0][1].text.split("/")[0])
 
     # Get the current universe and retrieve the new card
     universe = user_data.get("universe", "Не выбрана")
@@ -1064,20 +1116,29 @@ async def paginate_card(callback_query: types.CallbackQuery):
     }
 
     collection_name = universes.get(universe)
-    card_data = db[collection_name].find_one({"id": type_cards[new_page - 1]})
+    card_data = db[collection_name].find_one({"id": type_cards[page_id]})
+
+    page += 1
 
     # Build updated pagination keyboard
     keyboard = InlineKeyboardMarkup(row_width=3)
-    if new_page > 1:
+    if 1 < page < len(cards[indices[card_type]]):
         keyboard.add(
-            InlineKeyboardButton(text="⬅️", callback_data=f"page_previous"),
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}"),
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}_{page}_{card_type}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
         )
-    keyboard.add(
-        InlineKeyboardButton(text=f"{new_page}/{len(type_cards)}", callback_data="none")
-    )
-    if new_page < len(type_cards):
+
+    elif page == 1: 
         keyboard.add(
-            InlineKeyboardButton(text="➡️", callback_data=f"page_next"),
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+            InlineKeyboardButton(text="➡️", callback_data=f"movepage_{type_cards[page]}_{page}_{card_type}")
+        )
+
+    elif page == len(cards[indices[card_type]]):
+        keyboard.add(            
+            InlineKeyboardButton(text=f"{page}/{len(cards[indices[card_type]])}", callback_data="none"),
+            InlineKeyboardButton(text="⬅️", callback_data=f"movepage_{type_cards[page-2]}_{page}_{card_type}")
         )
 
     # Update the message with the new card details
