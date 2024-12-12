@@ -547,24 +547,22 @@ async def activate(message: types.Message):
         InlineKeyboardButton(text="Уволиться", callback_data="retire")
     )
 
-    # Check if the message is the admin activation command
-    if message.text == "/admin_activate":
-        if not user_is_admin and num_admins < 3:
-            # If the user is not an admin and there are less than 3 admins, activate the user
-            db.admins.insert_one({"user_id": user_id})  # Assuming user is added to the admins collection
-            await message.answer(
-                f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n"
-                f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
-                reply_markup=admin_key,
-                parse_mode="Markdown"
-            )
-        else:
-            # If the user is already an admin, send this message
-            await message.answer(
-                f"🤬 Не надо долбить, у тебя уже есть админ.",
-                reply_markup=admin_key,
-                parse_mode="Markdown"
-            )
+    if not user_is_admin and num_admins < 3:
+        # If the user is not an admin and there are less than 3 admins, activate the user
+        db.admins.insert_one({"user_id": user_id})  # Assuming user is added to the admins collection
+        await message.answer(
+            f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n"
+            f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
+            reply_markup=admin_key,
+            parse_mode="Markdown"
+        )
+    else:
+        # If the user is already an admin or there are 3 admins, send this message
+        await message.answer(
+            f"🤬 Не надо долбить, у тебя уже есть админ.",
+            reply_markup=admin_key,
+            parse_mode="Markdown"
+        )
 
 
 @rate_limit(1)
