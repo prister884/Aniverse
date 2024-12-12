@@ -1,7 +1,6 @@
 import logging
 import subprocess
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
+from aiogram import Bot, Dispatcher, executor, types
 
 # Replace with your management bot token
 MANAGEMENT_BOT_TOKEN = '8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo'
@@ -12,8 +11,12 @@ TARGET_BOT_SCRIPT = 'main.py'
 TARGET_BOT_VENV = 'source venv/bin/activate'
 
 # Set up logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize bot and dispatcher
+bot = Bot(token=MANAGEMENT_BOT_TOKEN)
+dp = Dispatcher(bot)
 
 # Utility function to execute shell commands
 def execute_command(command):
@@ -27,55 +30,44 @@ def execute_command(command):
         return f"Exception: {str(e)}"
 
 # Command handlers
-def start_bot(update: Update, context: CallbackContext):
+@dp.message_handler(commands=['start'])
+async def start_bot(message: types.Message):
     command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
-    message = execute_command(command)
-    update.message.reply_text(message)
+    result = execute_command(command)
+    await message.reply(result)
 
-def stop_bot(update: Update, context: CallbackContext):
+@dp.message_handler(commands=['stop'])
+async def stop_bot(message: types.Message):
     command = "pkill -f \"python /root/Aniverse/main.py\""
-    message = execute_command(command)
-    update.message.reply_text(message)
+    result = execute_command(command)
+    await message.reply(result)
 
-def restart_bot(update: Update, context: CallbackContext):
+@dp.message_handler(commands=['restart'])
+async def restart_bot(message: types.Message):
     stop_command = "pkill -f \"python /root/Aniverse/main.py\""
     start_command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
-    stop_message = execute_command(stop_command)
-    start_message = execute_command(start_command)
-    update.message.reply_text(f"Stop Command: {stop_message}\nStart Command: {start_message}")
+    stop_result = execute_command(stop_command)
+    start_result = execute_command(start_command)
+    await message.reply(f"Stop Command: {stop_result}\nStart Command: {start_result}")
 
-def update_bot(update: Update, context: CallbackContext):
+@dp.message_handler(commands=['update'])
+async def update_bot(message: types.Message):
     update_command = f"cd {TARGET_BOT_DIRECTORY} && git pull"
-    message = execute_command(update_command)
-    update.message.reply_text(message)
+    result = execute_command(update_command)
+    await message.reply(result)
 
-def status_bot(update: Update, context: CallbackContext):
+@dp.message_handler(commands=['status'])
+async def status_bot(message: types.Message):
     command = "ps aux | grep \"python /root/Aniverse/main.py\" | grep -v grep"
-    message = execute_command(command)
-    if "python" in message:
-        update.message.reply_text(f"Bot is running:\n{message}")
+    result = execute_command(command)
+    if "python" in result:
+        await message.reply(f"Bot is running:\n{result}")
     else:
-        update.message.reply_text("Bot is not running.")
+        await message.reply("Bot is not running.")
 
-def unknown_command(update: Update, context: CallbackContext):
-    update.message.reply_text("Unknown command. Available commands: /start, /stop, /restart, /update, /status")
-
-def main():
-    # Create the Application and pass it the bot's token
-    application = Application.builder().token(MANAGEMENT_BOT_TOKEN).build()
-
-    # Add command handlers
-    application.add_handler(CommandHandler('start', start_bot))
-    application.add_handler(CommandHandler('stop', stop_bot))
-    application.add_handler(CommandHandler('restart', restart_bot))
-    application.add_handler(CommandHandler('update', update_bot))
-    application.add_handler(CommandHandler('status', status_bot))
-
-    # Handle unknown commands
-    application.add_handler(CommandHandler('unknown', unknown_command))
-
-    # Start the Bot
-    application.run_polling()
+@dp.message_handler()
+async def unknown_command(message: types.Message):
+    await message.reply("Unknown command. Available commands: /start, /stop, /restart, /update, /status")
 
 if __name__ == '__main__':
-    main()
+    executor.start_polling(dp, skip_updates=True)
