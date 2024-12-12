@@ -100,7 +100,7 @@ def stop_bot():
     subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
 
 def update_bot():
-    stop_bot(tmux_session_name)  # Stop the bot first
+    stop_bot()  # Stop the bot first
     os.chdir(bot_directory)
 
     # Fetch changes from the remote repository
