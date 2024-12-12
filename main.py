@@ -966,7 +966,6 @@ async def process_callback(callback_query: types.CallbackQuery):
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
         )
 
-
         await callback_query.message.edit_text(
             f"🍙 [{nickname}](tg://user?id={user_id}), ты можешь скрафтить попытки из повторок и осколков\n\n"
             f"🌀 Твои повторки и осколки\n"
@@ -1067,8 +1066,70 @@ async def process_callback(callback_query: types.CallbackQuery):
 
 
 
-# @dp.callback_query_handler(lambda c: c.data.startswith("craft_"))
-# async def use_craft(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(lambda c: c.data.startswith("craft_"))
+async def use_craft(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    user_data = db.users.find_one({"user_id":user_id})
+
+    if not user_data:
+        await callback_query.message.answer("❌ Пользователь не найден.")
+
+    nickname = user_data.get("")
+    обычные = user_data.get("обычные", 0)
+    редкие = user_data.get("редкие", 0)
+    эпические = user_data.get("эпические", 0)
+    осколки = user_data.get("осколки",0)
+    spin_chances = user_data.get("spin_chances", 0)
+    action = callback_query.data.split("_")[1]
+
+    if action == "обычные":
+        if обычные>=10:
+            db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные-10,"spin_chances":spin_chances+1}})
+            await callback_query.message.answer(
+                f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                f"➖➖➖➖➖➖\n"
+                f"_10 ⚡️ карт ➠ 1 попытка_\n",
+                parse_mode="Markdown"
+            )
+        else: 
+            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+        
+    elif action == "редкие":
+        if редкие>=10:
+            db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие-10,"spin_chances":spin_chances+1}})
+            await callback_query.message.answer(
+                f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                f"➖➖➖➖➖➖\n"
+                f"_10 ✨ карт ➠ 2 попытка_\n",
+                parse_mode="Markdown"
+            )
+        else: 
+            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+
+    elif action == "эпические":
+        if эпические>=10:
+            db.users.update_one({"user_id":user_id},{"$set":{"'эпические'":эпические-10,"spin_chances":spin_chances+1}})
+            await callback_query.message.answer(
+                f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                f"➖➖➖➖➖➖\n"
+                f"_10 🐉 карт ➠ 4 попытка_\n",
+                parse_mode="Markdown"
+            )
+        else: 
+            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+            
+    elif action == "осколки":
+        if осколки>=10:
+            db.users.update_one({"user_id":user_id},{"$set":{"осколки":осколки-10,"spin_chances":spin_chances+1}})
+            await callback_query.message.answer(
+                f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                f"➖➖➖➖➖➖\n"
+                f"_10 🀄️ карт ➠ 1 попытка_\n",
+                parse_mode="Markdown"
+            )
+        else: 
+            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+    
 
     
 @rate_limit(5)
