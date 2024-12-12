@@ -943,7 +943,47 @@ async def process_callback(callback_query: types.CallbackQuery):
     elif action == "shop":
         await callback_query.answer("Вы выбрали Магазин. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "craft":
-        await callback_query.answer("Вы выбрали Крафт. Этот режим в процессе разработки. Вернитесь позже :(")
+        user_id = callback_query.from_user.id
+        user_data = db.users.find_one({"user_id":user_id})
+
+        if not user_data:
+            await callback_query.message.answer("❌ Пользователь не найден.")
+
+        nickname = user_data.get("")
+        обычные = user_data.get("обычные", 0)
+        редкие = user_data.get("редкие", 0)
+        эпические = user_data.get("эпические", 0)
+        осколки = user_data.get("осколки",0)
+
+        craftboard = InlineKeyboardMarkup(row_width=2).add(
+            InlineKeyboardButton(text="Скрафтить из ⚡️", callback_data="craft_casual"),
+            InlineKeyboardButton(text="Скрафтить из ✨", callback_data="craft_rare"),
+            InlineKeyboardButton(text="Скрафтить из 🐉", callback_data="craft_epic"),
+            InlineKeyboardButton(text="Скрафтить из 🀄️", callback_data="craft_osk"),
+        )
+        
+        craftboard.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
+        )
+
+
+        await callback_query.message.answer(
+            f"🍙 [{nickname}](tg://user?id={user_id}), ты можешь скрафтить попытки из повторок и осколков\n\n"
+            f"🌀 Твои повторки и осколки\n"
+            f"┏⚡️ Обычные - {обычные}\n"
+            f"┣✨ Редкие - {редкие}\n"
+            f"┣🐉 Эпические - {эпические}\n"
+            f"┗🀄️ Осколки - {осколки}\n\n"
+            f"🍡 Стоимость крафтов\n"
+            f"╔10 ⚡️ карт ➠ 1 попытка\n"
+            f"╠10 ✨ карт ➠ 2 попытки\n"
+            f"╠10 🐉 карт ➠ 4 попытки\n"
+            f"╚10 🀄️ оск. ➠ 1 попытка\n\n"
+            f"🛢️ Чтобы скрафтить сразу из всех материалов, пиши команду \"`Крафт вся [осколки/обычные/редкие/эпические]`\"",
+            parse_mode="Markdown",
+            reply_markup=craftboard
+        )
+    
     elif action == "arena":
         await callback_query.answer("Вы выбрали Арена. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "clans":
@@ -970,9 +1010,7 @@ async def process_callback(callback_query: types.CallbackQuery):
             f"🤝 Твоя ссылка: `{referral_link}` \n\n"
             f"📬 Такой возможностью можно воспользоваться не больше одного раза в сутки",
             parse_mode = "Markdown"
-        )
-        
-        
+        )        
     elif action == "change_universe":
         await callback_query.answer("Вы выбрали Сменить вселенную. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "spin_bonuses":
@@ -1027,6 +1065,12 @@ async def process_callback(callback_query: types.CallbackQuery):
         )
         
 
+
+
+# @dp.callback_query_handler(lambda c: c.data.startswith("craft_"))
+# async def use_craft(callback_query: types.CallbackQuery):
+
+    
 @rate_limit(5)
 @dp.callback_query_handler(lambda c: c.data.startswith("claim_spins"))
 async def claim_spins(callback_query: types.CallbackQuery):
@@ -1081,11 +1125,11 @@ async def claim_spins(callback_query: types.CallbackQuery):
 
             # Send success message
             message = (
-                f"🧸 {nickname}, ты успешно выполнил задание. Тебе начислено:\n"
+                f"🧸 [{nickname}](tg://user?id={user_id}), ты успешно выполнил задание. Тебе начислено:\n"
                 f"➖➖➖➖➖➖\n"
                 f"{reward_spins} 🃏 круток"
                 if reward_осколки == 0
-                else f"🧸 {nickname}, ты успешно выполнил задание. Тебе начислено:\n"
+                else f"🧸 [{nickname}](tg://user?id={user_id}), ты успешно выполнил задание. Тебе начислено:\n"
                 f"➖➖➖➖➖➖\n"
                 f"{reward_spins} 🃏 круток и {reward_осколки} 🀄️ осколков"
             )
