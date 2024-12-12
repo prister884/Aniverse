@@ -198,7 +198,7 @@ async def back_to(callback_query: types.CallbackQuery):
 
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
-    nickname = user_data.get("nickname")
+    nickname = user_data.get("nickname", "Гость")
     spin_chances = user_data.get("spin_chances", 0)
     universe = user_data.get("universe", "Не выбрана")
     seasonal_points = user_data.get("seasonal_points", 0)
@@ -517,7 +517,7 @@ async def handle_menu(message: types.Message):
     """
     user_id = message.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
-    nickname = user_data.get("nickname")
+    nickname = user_data.get("nickname", "Гость")
     spin_chances = user_data.get("spin_chances", 0)
     universe = user_data.get("universe", "Не выбрана")
     seasonal_points = user_data.get("seasonal_points", 0)
@@ -949,7 +949,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         if not user_data:
             await callback_query.message.answer("❌ Пользователь не найден.")
 
-        nickname = user_data.get("")
+        nickname = user_data.get("nickname", "Гость")
         обычные = user_data.get("обычные", 0)
         редкие = user_data.get("редкие", 0)
         эпические = user_data.get("эпические", 0)
@@ -1071,7 +1071,7 @@ async def use_craft(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id":user_id})
 
-    nickname = user_data.get("")
+    nickname = user_data.get("nickname", "Гость")
     обычные = user_data.get("обычные", 0)
     редкие = user_data.get("редкие", 0)
     эпические = user_data.get("эпические", 0)
