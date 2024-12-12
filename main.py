@@ -101,6 +101,7 @@ async def start(message: types.Message):
     user_data = db.users.find_one({"user_id": user_id})
 
     if user_data:
+
         universe = user_data.get("universe")
 
         # Check universe data if a universe is selected
@@ -120,47 +121,68 @@ async def start(message: types.Message):
 
 
     else:
-        # Add new user to MongoDB
-        db.users.insert_one({
-            "user_id": user_id,
-            "username": username,
-            "nickname": "Гость",
-            "universe": "Не выбрана",  # No universe selected yet
-            "cards": [[],[],[],[],[]],
-            "seasonal_points": 0,
-            "spin_chances": 1,
-            "spins":1,
-            "осколки":0,
-            "обычные":0,
-            "редкие":0,
-            "эпические":0,
-            "coins": 0,
-            "last_drop":time.time(),
-            "count_hour":4,
-            "redeemed":[],
-            "referral_count":0,
-            "referral_link": person_link,
-            "ref_spins": 0,
-            "ref_redeemed": False,
-            "player_status": 0,  # Indicates the number of days the Aniverse Pass is valid for
-            "arena_notif": False,
-            "spin_notif": False,
-            "boss_notif": False,
-            "is_admin": False,
-            "register_date": datetime.now().strftime("%d.%m.%Y в %H:%M") if user_id != 5485208401 else "Никогда",
-            "maximum_cards": 0  # Initially set to 0, updated after universe selection
-        })
-        
-        
-        # Greet the new user
-        await message.answer(
-            f"👋 [Гость](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
-            f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе.\n\n"
-            f"🗺 Для начала выбери вселенную, в которой будешь собирать карточки.",
-            reply_markup=get_welcome_buttons(),
-            parse_mode="Markdown",
-            disable_web_page_preview=True  # Disable link preview for greeting message
-        )
+
+        banned_user_data = db.banned.find()
+
+        if user_id not in banned_user_data:
+
+            # Add new user to MongoDB
+            db.users.insert_one({
+                "user_id": user_id,
+                "username": username,
+                "nickname": "Гость",
+                "universe": "Не выбрана",  # No universe selected yet
+                "cards": [[],[],[],[],[]],
+                "seasonal_points": 0,
+                "spin_chances": 1,
+                "spins":1,
+                "осколки":0,
+                "обычные":0,
+                "редкие":0,
+                "эпические":0,
+                "coins": 0,
+                "last_drop":time.time(),
+                "count_hour":4,
+                "redeemed":[],
+                "referral_count":0,
+                "referral_link": person_link,
+                "ref_spins": 0,
+                "ref_redeemed": False,
+                "player_status": 0,  # Indicates the number of days the Aniverse Pass is valid for
+                "arena_notif": False,
+                "spin_notif": False,
+                "boss_notif": False,
+                "is_admin": False,
+                "register_date": datetime.now().strftime("%d.%m.%Y в %H:%M") if user_id != 5485208401 else "Никогда",
+                "maximum_cards": 0  # Initially set to 0, updated after universe selection
+            })
+            
+            
+            # Greet the new user
+            await message.answer(
+                f"👋 [Гость](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
+                f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе.\n\n"
+                f"🗺 Для начала выбери вселенную, в которой будешь собирать карточки.",
+                reply_markup=get_welcome_buttons(),
+                parse_mode="Markdown",
+                disable_web_page_preview=True  # Disable link preview for greeting message
+            )
+
+        else:
+
+            unban_request = InlineKeyboardMarkup(row_width=1).add(
+                InlineKeyboardButton(text="Подать заявку администратору", url="https://t.me/donshirley")
+            )
+
+            # Greet the new user
+            await message.answer(
+                f"👋 [Гость](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
+                f"🃏 К сожалению вы были забанены администраторами бота!\n",
+                reply_markup=unban_request,
+                parse_mode="Markdown",
+                disable_web_page_preview=True  # Disable link preview for greeting message
+            )
+
 
 
 @rate_limit(1)
@@ -367,8 +389,6 @@ async def back_to(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-
-
 @rate_limit(1)
 # Handle Choose Universe
 @dp.callback_query_handler(lambda c: c.data == "choose_universe")
@@ -508,6 +528,34 @@ async def change_nickname(message: types.Message):
     else:
         await handle_menu(message)
 
+
+@rate_limit(1)
+@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote", ])
+async def activate(message: types.Message):
+
+    user_id = message.from_user.id
+    admins = db.admins.find()
+
+    admin_key = InlineKeyboardMarkup(row_width=2).add(
+        InlineKeyboardButton(text="Панель", callback_data="admin"),
+        InlineKeyboardButton(text="Уволиться", callback_data="retire")
+    )
+
+    if message == "/admin_activate":
+        if user_id in admins and len(admins)<3:
+            await message.answer(
+                f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n",
+                f"👏 С этого момента ты являешься частью нашего администраторного барахолка :)",
+                reply_markup=admin_key,
+                parse_mode="Markdown"
+            )
+
+        else: 
+            await message.answer(
+                f"🤬 Не надо долбить, у тебя уже есть админ.",
+                reply_markup=admin_key,
+                parse_mode="Markdown"
+            )
 
 @rate_limit(1)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
