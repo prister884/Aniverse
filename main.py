@@ -1111,7 +1111,7 @@ async def use_craft(callback_query: types.CallbackQuery):
 
         elif action == "epic":
             if эпические>=10:
-                db.users.update_one({"user_id":user_id},{"$set":{"'эпические'":эпические-10,"spin_chances":spin_chances+4}})
+                db.users.update_one({"user_id":user_id},{"$set":{"эпические":эпические-10,"spin_chances":spin_chances+4}})
                 await callback_query.message.answer(
                     f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
