@@ -582,7 +582,7 @@ async def handle_menu(message: types.Message):
 
 
             if user_data:
-                numbers = list(range(80, maximum[0]+1))
+                numbers = list(range(1, maximum[0]+1))
             
                 # Weights for each range
                 weights = []
