@@ -533,10 +533,6 @@ async def change_nickname(message: types.Message):
 @dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
 async def activate(message: types.Message):
 
-    @rate_limit(1)
-@dp.message_handler(commands=["admin_activate", "admin", "ban", "promote"])
-async def activate(message: types.Message):
-
     user_id = message.from_user.id
     # Fetch admins as a list and count the total number of admins
     admins = list(db.admins.find())  # Convert the cursor to a list
