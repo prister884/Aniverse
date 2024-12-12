@@ -8,7 +8,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 # Bot setup
 BOT_TOKEN = "8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo"
-bot_directory = "/root/Aniverse/"  # Path to the directory where your bot files are stored
+bot_directory = "/root/Aniverse"  # Path to the directory where your bot files are stored
 bot_script = "main.py"  # The main bot script
 git_repo_url = "https://github.com/prister884/Aniverse.git"  # GitHub repo URL
 tmux_session_name = "Aniverse"  # Name for the tmux session
@@ -59,63 +59,75 @@ async def start(message: types.Message):
 # Handle start bot action
 @dp.callback_query_handler(lambda c: c.data == "start_bot")
 async def manage_start_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
     await callback_query.answer("Starting the bot...")
 
-    # Perform the actual operation
-    start_bot()
-    await send_log("Bot has been started!", callback_query)
+    result = start_bot()
+    if result:
+        await send_log("Bot has been started!", callback_query)
+    else:
+        await send_log("Failed to start the bot. It may already be running.", callback_query)
 
 # Handle stop bot action
 @dp.callback_query_handler(lambda c: c.data == "stop_bot")
 async def manage_stop_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
     await callback_query.answer("Stopping the bot...")
 
-    # Perform the actual operation
-    stop_bot()
-    await send_log("Bot has been stopped!", callback_query)
+    result = stop_bot()
+    if result:
+        await send_log("Bot has been stopped!", callback_query)
+    else:
+        await send_log("Failed to stop the bot. It may not be running.", callback_query)
 
 # Handle update bot action
 @dp.callback_query_handler(lambda c: c.data == "update_bot")
 async def manage_update_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
     await callback_query.answer("Updating the bot...")
 
-    # Perform the actual operation
-    update_bot()
-    await send_log("Bot has been updated!", callback_query)
+    result = update_bot()
+    if result:
+        await send_log("Bot has been updated!", callback_query)
+    else:
+        await send_log("Failed to update the bot. Check for errors.", callback_query)
 
 # Functions to start, stop, and update the bot
 def start_bot():
-    tmux_check = subprocess.run(f"tmux ls | grep {tmux_session_name}", shell=True, capture_output=True)
+    tmux_check = subprocess.run(f"tmux has-session -t {tmux_session_name}", shell=True, capture_output=True)
     if tmux_check.returncode == 0:  # If tmux session already exists
-        return
-    
+        return False
+
     # Start the bot inside tmux
-    tmux_command = f"tmux new-session -d -s {tmux_session_name} 'python {bot_directory}/{bot}'"
+    tmux_command = f"tmux new-session -d -s {tmux_session_name} \"cd {bot_directory} && python3 {bot_script}\""
     subprocess.run(tmux_command, shell=True)
+    return True
 
 def stop_bot():
+    tmux_check = subprocess.run(f"tmux has-session -t {tmux_session_name}", shell=True, capture_output=True)
+    if tmux_check.returncode != 0:  # If tmux session doesn't exist
+        return False
+
     subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
+    return True
 
 def update_bot():
-    stop_bot()  # Stop the bot first
-    os.chdir(bot_directory)
+    try:
+        stop_bot()  # Stop the bot first
+        os.chdir(bot_directory)
 
-    # Fetch changes from the remote repository
-    subprocess.run(["git", "fetch"], capture_output=True)
-    
-    # Check for changes between local and remote
-    result = subprocess.run(
-        ["git", "status", "-uno"], capture_output=True, text=True
-    )
-    if "Your branch is behind" in result.stdout:
-        # Pull latest updates from GitHub if the local branch is behind
-        subprocess.run(["git", "pull"])
-        subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-        start_bot()  # Restart the bot
-        send_log("Automatic update has been performed")
+        # Fetch changes from the remote repository
+        subprocess.run(["git", "fetch"], capture_output=True)
+
+        # Check for changes between local and remote
+        result = subprocess.run(["git", "status", "-uno"], capture_output=True, text=True)
+        if "Your branch is behind" in result.stdout:
+            # Pull latest updates from GitHub if the local branch is behind
+            subprocess.run(["git", "pull"])
+            subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
+            start_bot()  # Restart the bot
+            return True
+        return False
+    except Exception as e:
+        print(f"Error during update: {e}")
+        return False
 
 # Run the bot
 if __name__ == "__main__":
