@@ -1,126 +1,85 @@
-import os
+import logging
 import subprocess
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
-from aiogram.utils import executor
-from aiogram.contrib.middlewares.logging import LoggingMiddleware
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
-# Bot setup
-BOT_TOKEN = "8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo"
-bot_directory = "/root/Aniverse/"  # Path to the directory where your bot files are stored
-bot_script = "main.py"  # The main bot script
-manager_script = "bot-manager.py"
-git_repo_url = "https://github.com/prister884/Aniverse.git"  # GitHub repo URL
-tmux_session_name = "Aniverse"  # Name for the tmux session
-tmux_session_name_manager = "bot-manager"
+# Replace with your management bot token
+MANAGEMENT_BOT_TOKEN = '8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo'
 
-# Initialize bot and dispatcher with MemoryStorage
-storage = MemoryStorage()  # Initialize memory storage for temporary data
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot, storage=storage)  # Link storage to the dispatcher
+# Target bot details
+TARGET_BOT_DIRECTORY = '/root/Aniverse'
+TARGET_BOT_SCRIPT = 'main.py'
+TARGET_BOT_VENV = 'source venv/bin/activate'
 
-# Enable logging middleware
-dp.middleware.setup(LoggingMiddleware())
+# Set up logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Create a reply keyboard with the Terminal button
-TERMINAL_WEB_APP_URL = "https://shell.ptud.live"  # Replace with the actual web app URL
+# Utility function to execute shell commands
+def execute_command(command):
+    try:
+        result = subprocess.run(command, shell=True, text=True, capture_output=True)
+        if result.returncode == 0:
+            return f"Success: {result.stdout.strip()}"
+        else:
+            return f"Error: {result.stderr.strip()}"
+    except Exception as e:
+        return f"Exception: {str(e)}"
 
-def get_reply_keyboard():
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(
-        KeyboardButton(text="Terminal", web_app=WebAppInfo(url=TERMINAL_WEB_APP_URL))  # Opens the mini app
-    )
-    return keyboard
+# Command handlers
+def start_bot(update: Update, context: CallbackContext):
+    command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
+    message = execute_command(command)
+    update.message.reply_text(message)
 
-# Function to send log messages to the Telegram bot
-async def send_log(message: str, callback_query: types.CallbackQuery):
-    """Function to send log messages."""
-    await callback_query.message.answer(message, reply_markup=get_reply_keyboard())
+def stop_bot(update: Update, context: CallbackContext):
+    command = "pkill -f \"python /root/Aniverse/main.py\""
+    message = execute_command(command)
+    update.message.reply_text(message)
 
-# Command to manage the bot
-@dp.message_handler(commands=["start"])
-async def start(message: types.Message):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton(text="Start Bot", callback_data="start_bot"),
-        InlineKeyboardButton(text="Stop Bot", callback_data="stop_bot"),
-        InlineKeyboardButton(text="Update Bot", callback_data="update_bot")
-    )
+def restart_bot(update: Update, context: CallbackContext):
+    stop_command = "pkill -f \"python /root/Aniverse/main.py\""
+    start_command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
+    stop_message = execute_command(stop_command)
+    start_message = execute_command(start_command)
+    update.message.reply_text(f"Stop Command: {stop_message}\nStart Command: {start_message}")
 
-    # Send a message with the management options and reply keyboard
-    await message.answer(
-        "Choose an option to manage the bot:", 
-        reply_markup=keyboard
-    )
-    await message.answer(
-        "You can also open the Terminal below:", 
-        reply_markup=get_reply_keyboard()
-    )
+def update_bot(update: Update, context: CallbackContext):
+    update_command = f"cd {TARGET_BOT_DIRECTORY} && git pull"
+    message = execute_command(update_command)
+    update.message.reply_text(message)
 
-# Handle start bot action
-@dp.callback_query_handler(lambda c: c.data == "start_bot")
-async def manage_start_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
-    await callback_query.answer("Starting the bot...")
+def status_bot(update: Update, context: CallbackContext):
+    command = "ps aux | grep \"python /root/Aniverse/main.py\" | grep -v grep"
+    message = execute_command(command)
+    if "python" in message:
+        update.message.reply_text(f"Bot is running:\n{message}")
+    else:
+        update.message.reply_text("Bot is not running.")
 
-    # Perform the actual operation
-    start_bot(tmux_session_name, bot_script)
-    await send_log("Bot has been started!", callback_query)
+def unknown_command(update: Update, context: CallbackContext):
+    update.message.reply_text("Unknown command. Available commands: /start, /stop, /restart, /update, /status")
 
-# Handle stop bot action
-@dp.callback_query_handler(lambda c: c.data == "stop_bot")
-async def manage_stop_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
-    await callback_query.answer("Stopping the bot...")
+def main():
+    # Create the Updater and pass it the bot's token
+    updater = Updater(MANAGEMENT_BOT_TOKEN)
 
-    # Perform the actual operation
-    stop_bot()
-    await send_log("Bot has been stopped!", callback_query)
+    # Get the dispatcher to register handlers
+    dispatcher = updater.dispatcher
 
-# Handle update bot action
-@dp.callback_query_handler(lambda c: c.data == "update_bot")
-async def manage_update_bot(callback_query: types.CallbackQuery):
-    # Acknowledge the callback to prevent loading animation
-    await callback_query.answer("Updating the bot...")
+    # Add command handlers
+    dispatcher.add_handler(CommandHandler('start', start_bot))
+    dispatcher.add_handler(CommandHandler('stop', stop_bot))
+    dispatcher.add_handler(CommandHandler('restart', restart_bot))
+    dispatcher.add_handler(CommandHandler('update', update_bot))
+    dispatcher.add_handler(CommandHandler('status', status_bot))
 
-    # Perform the actual operation
-    update_bot()
-    await send_log("Bot has been updated!", callback_query)
+    # Handle unknown commands
+    dispatcher.add_handler(CommandHandler('unknown', unknown_command))
 
-# Functions to start, stop, and update the bot
-def start_bot(session, bot):
-    tmux_check = subprocess.run(f"tmux ls | grep {session}", shell=True, capture_output=True)
-    if tmux_check.returncode == 0:  # If tmux session already exists
-        return
-    
-    # Start the bot inside tmux
-    tmux_command = f"tmux new-session -d -s {session} 'python {bot_directory}/{bot}'"
-    subprocess.run(tmux_command, shell=True)
+    # Start the Bot
+    updater.start_polling()
+    updater.idle()
 
-def stop_bot(session):
-    subprocess.run(f"tmux kill-session -t {tmux_session_name}", shell=True)
-
-def update_bot():
-    stop_bot(tmux_session_name)  # Stop the bot first
-    stop_bot(tmux_session_name_manager)
-    os.chdir(bot_directory)
-
-    # Fetch changes from the remote repository
-    subprocess.run(["git", "fetch"], capture_output=True)
-    
-    # Check for changes between local and remote
-    result = subprocess.run(
-        ["git", "status", "-uno"], capture_output=True, text=True
-    )
-    if "Your branch is behind" in result.stdout:
-        # Pull latest updates from GitHub if the local branch is behind
-        subprocess.run(["git", "pull"])
-        subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-        start_bot(tmux_session_name_manager, manager_script)  # Restart the bot manager
-        start_bot(tmux_session_name, bot_script)  # Restart the bot
-        print("Auto-updated your branch")
-
-# Run the bot
-if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+if __name__ == '__main__':
+    main()
