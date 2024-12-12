@@ -541,7 +541,7 @@ async def activate(message: types.Message):
         InlineKeyboardButton(text="Уволиться", callback_data="retire")
     )
 
-    if message == "/admin_activate":
+    if message.text == "/admin_activate":
         if user_id in admins and len(admins)<3:
             await message.answer(
                 f"🎉 С днём рождения, админ-чик, {message.from_user.first_name}!\n",
