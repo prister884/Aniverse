@@ -1,14 +1,15 @@
 import logging
 import subprocess
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Replace with your management bot token
-MANAGEMENT_BOT_TOKEN = '8178702211:AAFzHDX_22rch3R0yf4m-iLGgEz8iQDt0jo'
+MANAGEMENT_BOT_TOKEN = 'YOUR_MANAGEMENT_BOT_TOKEN'
 
 # Target bot details
 TARGET_BOT_DIRECTORY = '/root/Aniverse'
 TARGET_BOT_SCRIPT = 'main.py'
-TARGET_BOT_VENV = 'source venv/bin/activate'
+TMUX_SESSION_NAME = 'Aniverse'
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,45 +30,43 @@ def execute_command(command):
     except Exception as e:
         return f"Exception: {str(e)}"
 
+# Inline keyboard for commands
+command_keyboard = InlineKeyboardMarkup(row_width=2)
+command_keyboard.add(
+    InlineKeyboardButton("Start", callback_data="start"),
+    InlineKeyboardButton("Stop", callback_data="stop"),
+    InlineKeyboardButton("Restart", callback_data="restart"),
+    InlineKeyboardButton("Update", callback_data="update"),
+    InlineKeyboardButton("Status", callback_data="status")
+)
+
 # Command handlers
-@dp.message_handler(commands=['start'])
-async def start_bot(message: types.Message):
-    command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
+@dp.message_handler(commands=['menu'])
+async def show_menu(message: types.Message):
+    await message.reply("Select an action:", reply_markup=command_keyboard)
+
+@dp.callback_query_handler(lambda c: c.data in ["start", "stop", "restart", "update", "status"])
+async def handle_command(callback_query: types.CallbackQuery):
+    command_map = {
+        "start": f"tmux new-session -d -s {TMUX_SESSION_NAME} 'cd {TARGET_BOT_DIRECTORY} && source venv/bin/activate && python {TARGET_BOT_SCRIPT}'",
+        "stop": f"tmux kill-session -t {TMUX_SESSION_NAME}",
+        "restart": f"tmux kill-session -t {TMUX_SESSION_NAME} && tmux new-session -d -s {TMUX_SESSION_NAME} 'cd {TARGET_BOT_DIRECTORY} && source venv/bin/activate && python {TARGET_BOT_SCRIPT}'",
+        "update": f"cd {TARGET_BOT_DIRECTORY} && git pull && source venv/bin/activate && pip install -r requirements.txt",
+        "status": f"tmux list-sessions | grep {TMUX_SESSION_NAME}"
+    }
+
+    command = command_map[callback_query.data]
     result = execute_command(command)
-    await message.reply(result)
 
-@dp.message_handler(commands=['stop'])
-async def stop_bot(message: types.Message):
-    command = f"pkill -f \"python {TARGET_BOT_DIRECTORY}/{TARGET_BOT_SCRIPT}\""
-    result = execute_command(command)
-    await message.reply(result)
+    # Customize status output
+    if callback_query.data == "status":
+        if "{TMUX_SESSION_NAME}" in result:
+            result = "Bot is running in tmux."
+        else:
+            result = "Bot is not running."
 
-@dp.message_handler(commands=['restart'])
-async def restart_bot(message: types.Message):
-    stop_command = f"pkill -f \"python {TARGET_BOT_DIRECTORY}/{TARGET_BOT_SCRIPT}\""
-    start_command = f"cd {TARGET_BOT_DIRECTORY} && {TARGET_BOT_VENV} && nohup python {TARGET_BOT_SCRIPT} &"
-    stop_result = execute_command(stop_command)
-    start_result = execute_command(start_command)
-    await message.reply(f"Stop Command: {stop_result}\nStart Command: {start_result}")
-
-@dp.message_handler(commands=['update'])
-async def update_bot(message: types.Message):
-    update_command = f"cd {TARGET_BOT_DIRECTORY} && git pull && {TARGET_BOT_VENV} && pip install -r requirements.txt"
-    result = execute_command(update_command)
-    await message.reply(result)
-
-@dp.message_handler(commands=['status'])
-async def status_bot(message: types.Message):
-    command = f"ps aux | grep \"python {TARGET_BOT_DIRECTORY}/{TARGET_BOT_SCRIPT}\" | grep -v grep"
-    result = execute_command(command)
-    if "python" in result:
-        await message.reply(f"Bot is running:\n{result}")
-    else:
-        await message.reply("Bot is not running.")
-
-@dp.message_handler()
-async def unknown_command(message: types.Message):
-    await message.reply("Unknown command. Available commands: /start, /stop, /restart, /update, /status")
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(callback_query.from_user.id, result)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
