@@ -8,7 +8,7 @@ for file in *.mp4; do
   gif_file="${base_name}.gif"
   ffmpeg -i "$compressed_file" -vf "fps=15,scale=iw:-1:flags=lanczos" -c:v gif "$gif_file"
   optimized_gif="${base_name}_optimized.gif"
-  gifsicle --optimize=3 --colors 256 "$gif_file" > "$optimized_gif"
+  gifsicle --optimize=3 --colors 128 "$gif_file" > "$optimized_gif"
   final_gif="${base_name}.gif"
   mv "$optimized_gif" "$final_gif"
   rm "$compressed_file"
