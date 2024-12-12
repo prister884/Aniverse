@@ -1071,9 +1071,6 @@ async def use_craft(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     user_data = db.users.find_one({"user_id":user_id})
 
-    if not user_data:
-        await callback_query.message.answer("❌ Пользователь не найден.")
-
     nickname = user_data.get("")
     обычные = user_data.get("обычные", 0)
     редкие = user_data.get("редкие", 0)
@@ -1082,56 +1079,142 @@ async def use_craft(callback_query: types.CallbackQuery):
     spin_chances = user_data.get("spin_chances", 0)
     action = callback_query.data.split("_")[1]
 
-    if action == "casual":
+    if not user_data:
+        await callback_query.message.answer("❌ Пользователь не найден.")
+
+    else:
+        if action == "casual":
+            if обычные>=10:
+                db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные-10,"spin_chances":spin_chances+1}})
+                await callback_query.message.answer(
+                    f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                    f"➖➖➖➖➖➖\n"
+                    f"_10 ⚡️ карт ➠ 1 попытка_\n",
+                    parse_mode="Markdown"
+                )
+            else: 
+                await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+            
+        elif action == "rare":
+            if редкие>=10:
+                db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие-10,"spin_chances":spin_chances+2}})
+                await callback_query.message.answer(
+                    f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                    f"➖➖➖➖➖➖\n"
+                    f"_10 ✨ карт ➠ 2 попытка_\n",
+                    parse_mode="Markdown"
+                )
+            else: 
+                await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+
+        elif action == "epic":
+            if эпические>=10:
+                db.users.update_one({"user_id":user_id},{"$set":{"'эпические'":эпические-10,"spin_chances":spin_chances+4}})
+                await callback_query.message.answer(
+                    f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                    f"➖➖➖➖➖➖\n"
+                    f"_10 🐉 карт ➠ 4 попытка_\n",
+                    parse_mode="Markdown"
+                )
+            else: 
+                await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+
+        elif action == "osk":
+            if осколки>=10:
+                db.users.update_one({"user_id":user_id},{"$set":{"осколки":осколки-10,"spin_chances":spin_chances+1}})
+                await callback_query.message.answer(
+                    f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
+                    f"➖➖➖➖➖➖\n"
+                    f"_10 🀄️ карт ➠ 1 попытка_\n",
+                    parse_mode="Markdown"
+                )
+            else: 
+                await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+
+    
+@dp.message_handler(lambda m: m.data.startswith("Крафт вся"))
+async def craft_all(message: types.Message):
+    
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id":user_id})
+
+    nickname = user_data.get("")
+    обычные = user_data.get("обычные", 0)
+    редкие = user_data.get("редкие", 0)
+    эпические = user_data.get("эпические", 0)
+    осколки = user_data.get("осколки",0)
+    spin_chances = user_data.get("spin_chances", 0)
+    action = message.data.split(" ")[2]
+
+    ob_craft = (обычные//10)*1
+    red_craft = (редкие//10)*2
+    epic_craft = (эпические//10)*4
+    osk_craft = (осколки//10)*1
+
+    if action == "обычные":
         if обычные>=10:
-            db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные-10,"spin_chances":spin_chances+1}})
-            await callback_query.message.answer(
+            db.users.update_one({"user_id":user_id},{"$set":{"обычные": обычные%10,"spin_chances":spin_chances+ob_craft}})
+            await message.answer(
                 f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                 f"➖➖➖➖➖➖\n"
-                f"_10 ⚡️ карт ➠ 1 попытка_\n",
+                f"🧱 Потрачено повторок: {обычные-(обычные%10)} ⚡️\n"
+                f"🌌 Получено круток: {ob_craft} 🃏\n",
                 parse_mode="Markdown"
             )
         else: 
-            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
-        
-    elif action == "rare":
+            await message.answer("🌀 [{nickname}](tg://user?id={user_id}), недостаточно материалов для крафта.")
+
+    elif action == "редкие":
         if редкие>=10:
-            db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие-10,"spin_chances":spin_chances+2}})
-            await callback_query.message.answer(
+            db.users.update_one({"user_id":user_id},{"$set":{"редкие": редкие%10,"spin_chances":spin_chances+red_craft}})
+            await message.answer(
                 f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                 f"➖➖➖➖➖➖\n"
-                f"_10 ✨ карт ➠ 2 попытка_\n",
+                f"🧱 Потрачено повторок: {редкие-(редкие%10)} ⚡️\n"
+                f"🌌 Получено круток: {red_craft} 🃏\n",
                 parse_mode="Markdown"
             )
         else: 
-            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
+            await message.answer("🌀 [{nickname}](tg://user?id={user_id}), недостаточно материалов для крафта.")
 
-    elif action == "epic":
+    elif action == "эпические":
         if эпические>=10:
-            db.users.update_one({"user_id":user_id},{"$set":{"'эпические'":эпические-10,"spin_chances":spin_chances+4}})
-            await callback_query.message.answer(
+            db.users.update_one({"user_id":user_id},{"$set":{"эпические": эпические%10,"spin_chances":spin_chances+epic_craft}})
+            await message.answer(
                 f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                 f"➖➖➖➖➖➖\n"
-                f"_10 🐉 карт ➠ 4 попытка_\n",
+                f"🧱 Потрачено повторок: {эпические-(эпические%10)} ⚡️\n"
+                f"🌌 Получено круток: {epic_craft} 🃏\n",
                 parse_mode="Markdown"
             )
         else: 
-            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
-
-    elif action == "osk":
+            await message.answer("🌀 [{nickname}](tg://user?id={user_id}), недостаточно материалов для крафта.")
+    
+    elif action == "осколки":
         if осколки>=10:
-            db.users.update_one({"user_id":user_id},{"$set":{"осколки":осколки-10,"spin_chances":spin_chances+1}})
-            await callback_query.message.answer(
+            db.users.update_one({"user_id":user_id},{"$set":{"осколки": осколки%10,"spin_chances":spin_chances+osk_craft}})
+            await message.answer(
                 f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                 f"➖➖➖➖➖➖\n"
-                f"_10 🀄️ карт ➠ 1 попытка_\n",
+                f"🧱 Потрачено повторок: {осколки-(осколки%10)} ⚡️\n"
+                f"🌌 Получено круток: {osk_craft} 🃏\n",
                 parse_mode="Markdown"
             )
         else: 
-            await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
-    
+            await message.answer("🌀 [{nickname}](tg://user?id={user_id}), недостаточно материалов для крафта.")
 
-    
+    else: 
+        await message.answer(
+            f"ℹ️[{nickname}](tg://user?id={user_id}), чтобы скрафтить крутки сразу из всех материалов, пиши команду \"`крафт вся [осколки/обычные/редкие/эпические]`\".\n\n"
+            f"🧤 Примеры команд: \n"
+            f"➤ `Крафт вся осколки`\n"
+            f"➤ `Крафт вся обычные`\n"
+            f"➤ `Крафт вся редкие`\n"
+            f"➤ `Крафт вся эпические`"
+        )
+
+
+
 @rate_limit(5)
 @dp.callback_query_handler(lambda c: c.data.startswith("claim_spins"))
 async def claim_spins(callback_query: types.CallbackQuery):
