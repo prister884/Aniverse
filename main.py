@@ -542,6 +542,8 @@ async def handle_menu(message: types.Message):
     maximum_legendary = maximum[4]
     maximum_mythic = maximum[5]
     
+
+
     if not user_data:
         await message.answer("❌ Пожалуйста, сначала введите команду /start.")
         return
@@ -580,7 +582,7 @@ async def handle_menu(message: types.Message):
 
 
             if user_data:
-                numbers = list(range(1, maximum[0]+1))
+                numbers = list(range(80, maximum[0]+1))
             
                 # Weights for each range
                 weights = []
@@ -596,7 +598,7 @@ async def handle_menu(message: types.Message):
                     elif maximum_epic+1 <= num <= maximum_legendary:
                         weights.append(0.5)  # Half the probability of the previous range
                     else:
-                        weights.append(0.3)  # Quarter of the probability of the previous range
+                        weights.append(0.15)  # Quarter of the probability of the previous range
                 
                 random_number = random.choices(numbers, weights=weights, k=1)[0]
 
