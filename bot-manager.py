@@ -114,8 +114,8 @@ def update_bot():
         # Pull latest updates from GitHub if the local branch is behind
         subprocess.run(["git", "pull"])
         subprocess.run(["pip", "install", "-r", "requirements.txt"])  # Install any new dependencies
-        start_bot(tmux_session_name, bot_script)  # Restart the bot
-        print("Auto-updated your branch")
+        start_bot()  # Restart the bot
+        send_log("Automatic update has been performed")
 
 # Run the bot
 if __name__ == "__main__":
