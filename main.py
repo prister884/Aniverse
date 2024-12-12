@@ -1082,7 +1082,7 @@ async def use_craft(callback_query: types.CallbackQuery):
     spin_chances = user_data.get("spin_chances", 0)
     action = callback_query.data.split("_")[1]
 
-    if action == "обычные":
+    if action == "casual":
         if обычные>=10:
             db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные-10,"spin_chances":spin_chances+1}})
             await callback_query.message.answer(
@@ -1094,7 +1094,7 @@ async def use_craft(callback_query: types.CallbackQuery):
         else: 
             await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
         
-    elif action == "редкие":
+    elif action == "rare":
         if редкие>=10:
             db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие-10,"spin_chances":spin_chances+2}})
             await callback_query.message.answer(
@@ -1106,7 +1106,7 @@ async def use_craft(callback_query: types.CallbackQuery):
         else: 
             await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
 
-    elif action == "эпические":
+    elif action == "epic":
         if эпические>=10:
             db.users.update_one({"user_id":user_id},{"$set":{"'эпические'":эпические-10,"spin_chances":spin_chances+4}})
             await callback_query.message.answer(
@@ -1118,7 +1118,7 @@ async def use_craft(callback_query: types.CallbackQuery):
         else: 
             await callback_query.answer("🌀 Тебе не хватает повторок", show_alert=True)
 
-    elif action == "осколки":
+    elif action == "osk":
         if осколки>=10:
             db.users.update_one({"user_id":user_id},{"$set":{"осколки":осколки-10,"spin_chances":spin_chances+1}})
             await callback_query.message.answer(
