@@ -122,9 +122,9 @@ async def start(message: types.Message):
 
     else:
 
-        banned_user_data = db.banned.find()
+        banned_user_data = db.banned.find_one({"user_id":user_id})
 
-        if user_id not in banned_user_data:
+        if not banned_user_data:
 
             # Add new user to MongoDB
             db.users.insert_one({
