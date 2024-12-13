@@ -993,7 +993,6 @@ async def handle_menu(message: types.Message):
 
                 keyboard.add(
                     KeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
-                    KeyboardButton(text="👤 Профиль администратора", callback_data="admin_profile")
                 )
 
                 keyboard.add(
@@ -1004,7 +1003,6 @@ async def handle_menu(message: types.Message):
 
                 keyboard.add(
                     KeyboardButton(text="😐 Пользователи", callback_data="admin_users"),
-                    KeyboardButton(text="📊 Статус бота", callback_data="admin_status"),
                 )
 
                 keyboard.add(
@@ -1035,12 +1033,10 @@ async def handle_menu(message: types.Message):
                 keyboard.add(
                     KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
                     KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                    KeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
                 )
 
                 keyboard.add(
                     KeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
-                    KeyboardButton(text="👤 Профиль", callback_data="admin_profile")
                 )
 
                 keyboard.add(
@@ -1051,7 +1047,6 @@ async def handle_menu(message: types.Message):
 
                 keyboard.add(
                     KeyboardButton(text="😐 Пользователи", callback_data="admin_promo"),
-                    KeyboardButton(text="📊 Статус бота", callback_data="admin_selfspins"),
                 )
 
                 keyboard.add(
