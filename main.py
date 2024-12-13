@@ -248,7 +248,7 @@ async def admin_commands(message: types.Message):
 
                 await message.answer("✅")
                 await message.answer(
-                    f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n"
+                    f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
                     parse_mode="Markdown"
                 )
 
