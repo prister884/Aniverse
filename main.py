@@ -79,6 +79,7 @@ async def admin_commands(message: types.Message):
 
     user_id = message.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
+    admin_data = db.admins.find_one({"user_id": user_id})
 
     if not user_data:
         await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
@@ -92,6 +93,7 @@ async def admin_commands(message: types.Message):
     admin_role = admin_data.get("role", "limited")
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
+
 
     if message.text.startswith("/update"):
         if admin_role in ["owner", "advanced"]:
@@ -288,6 +290,52 @@ async def admin_commands(message: types.Message):
                         f"Ваш лимит: {limit}.\n",
                         parse_mode="Markdown"
                     )
+
+    elif message.text.startswith("/self_spin"):
+        
+        user_id = message.from_user.id
+        user_data = db.users.find_one({"user_id":user_id})
+
+        us_spin_chances = user_data.get("spin_chances",0)
+        self_spins = admin_data.get("self_spins",0)
+
+        spin_chances = int(parts[1])
+        limit = admin_data.get("spins")
+
+        if admin_role == "owner":
+            db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
+
+            await message.answer("✅")
+            await message.answer(
+                f"✅ Вы выдали себе {spin_chances} круток\n",
+                parse_mode="Markdown"
+            )
+
+
+        elif admin_role in ["limited", "advanced"]:
+
+            if self_spins>=spin_chances:
+
+                db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
+                db.admins.update_one({"user_id":user_id},{"$set":{"self_spins":self_spins-spin_chances}})                
+
+                await message.answer("✅")
+                await message.answer(
+                    f"✅ Вы выдали себе {spin_chances} круток.\n"
+                    f"Ваш оставшийся лимит: {self_spins-spin_chances}.\n",
+                    parse_mode="Markdown"
+                )
+
+            else:
+
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n"
+                    f"Ваш оставшийся лимит: {self_spins-spin_chances}.\n",
+                    parse_mode="Markdown"
+                )
+
+            
 
 
 
