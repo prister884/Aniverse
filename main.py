@@ -640,7 +640,86 @@ async def admin_message_handler(message: types.Message):
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
     else:
         # Ensure handle_menu is awaited if it's async
-        await handle_menu(message)
+        await craft_all(message)
+
+@rate_limit(0.5)
+@dp.message_handler(content_types=types.ContentTypes.TEXT)
+async def craft_all(message: types.Message):
+
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id":user_id})
+
+    nickname = user_data.get("nickname", "Гость")
+
+    осколки = user_data.get("осколки", 0)
+    обычные = user_data.get("обычные", 0)
+    редкие = user_data.get("редкие", 0)
+    эпические = user_data.get("эпические", 0)
+
+    if message.lower().startswith("крафт вся"):
+        parts = message.text.split(maxsplit=2)
+
+        if len(parts) < 3 or len(parts) > 3:
+
+            await message.answer(
+                f"ℹ️ [{nickname}](tg://user?id={user_id}), чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
+                f"🧤 Примеры команд:\n"
+                f"➤ `Крафт вся осколки`\n"
+                f"➤ `Крафт вся обычные`\n"
+                f"➤ `Крафт вся редкие`\n"
+                f"➤ `Крафт вся эпические`\n"
+            )
+        
+        else: 
+
+            emojis = {
+                "осколки": "🀄️",
+                "обычные": "⚡",
+                "редкие": "✨",
+                "эпические": "🐉",
+            }
+
+            if parts[2] == "осколки": 
+                craft_type = "осколков"
+                craft_remainder = осколки - (осколки//10)
+                craft_amount = (осколки//10)*1
+            elif parts[2] == "обычные":
+                craft_remainder = обычные - (обычные//10)
+                craft_amount = (обычные//10)*1
+            elif parts[2] == "редкие":
+                craft_remainder = редкие - (редкие//10)
+                craft_amount = (редкие//10)*2
+            elif parts[2] == "эпические":
+                craft_remainder = эпические - (эпические//10)
+                craft_amount = (эпические//10)*4
+            
+            else:
+                await message.answer(
+                    f"ℹ️ [{nickname}](tg://user?id={user_id}), чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
+                    f"🧤 Примеры команд:\n"
+                    f"➤ `Крафт вся осколки`\n"
+                    f"➤ `Крафт вся обычные`\n"
+                    f"➤ `Крафт вся редкие`\n"
+                    f"➤ `Крафт вся эпические`\n"
+                )
+
+            if craft_amount > 0:
+                await message.answer(
+                    f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно\n"
+                    f"➖➖➖➖➖➖\n"
+                    f"🧱 Потрачено {craft_type}: {user_data.get(parts[2])-craft_remainder} {emojis[parts[2]]}"
+                    f"🌌 Получено круток: {craft_amount} 🃏",
+                    parse_mode="Markdown"
+                )
+            else: 
+                await message.answer(
+                    f"🌀 [{nickname}](tg://user?id={user_id}), недостаточно материалов для крафта.",
+                    parse_mode="Markdown"
+                )
+
+
+    else: handle_menu(message)
+
 
 @rate_limit(0.5)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
@@ -1398,7 +1477,7 @@ async def use_craft(callback_query: types.CallbackQuery):
                 await callback_query.message.answer(
                     f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
-                    f"_10 🀄️ карт ➠ 1 попытка_\n",
+                    f"_10 🀄️ осколков ➠ 1 попытка_\n",
                     parse_mode="Markdown"
                 )
             else: 
