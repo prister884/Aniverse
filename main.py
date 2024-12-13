@@ -79,6 +79,7 @@ async def admin_commands(message: types.Message):
 
     user_id = message.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
+
     if not user_data:
         await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
         return
@@ -137,6 +138,7 @@ async def admin_commands(message: types.Message):
             return
 
         target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id": target_user_id})
         target_role = db.admins.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
 
