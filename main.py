@@ -678,7 +678,7 @@ async def craft_all(message: types.Message):
                 "эпические": "🐉",
             }
 
-            universes = {
+            craftables = {
                 "осколки": осколки,
                 "обычные": обычные,
                 "редкие": редкие,
@@ -718,7 +718,7 @@ async def craft_all(message: types.Message):
                 db.users.update_one(
                     {"user_id": user_id},
                     {"$set":{
-                        f"universes[craft]":(user_data.get(parts[2])-user_data.get(parts[2])-craft_remainder),
+                        f"{craftables[craft]}":(user_data.get(parts[2])-(user_data.get(parts[2])-craft_remainder)),
                         "spin_chances":user_data.get("spin_chances")+craft_amount
                     }}
                 )
