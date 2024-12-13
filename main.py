@@ -88,8 +88,6 @@ async def admin_commands(message: types.Message):
     admin_role = admin_data.get("role", "limited")
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
-    target_user = db.users.find_one({"user_id":int(parts[1])})
-    new_role = parts[2]
 
     if message.text.startswith("/update"):
         if admin_role in ["owner", "advanced"]:
