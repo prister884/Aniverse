@@ -83,7 +83,6 @@ async def admin_commands(message: types.Message):
     admin_role = admin_data.get("role","limited")
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
-    c_data = db.users.find_one(parts[1])
 
     if not user_data:
 
@@ -117,6 +116,7 @@ async def admin_commands(message: types.Message):
 
     elif message.text == "add_admin":
 
+        c_data = db.users.find_one(parts[1])
         if not c_data:
 
             await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
@@ -138,7 +138,8 @@ async def admin_commands(message: types.Message):
             await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
   
     elif message.text == "promote":  
-
+        
+        c_data = db.users.find_one(parts[1])
         if not c_data:
 
             await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
