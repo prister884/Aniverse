@@ -975,7 +975,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1096,7 +1096,6 @@ async def handle_menu(message: types.Message):
     else:
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
-
 
 universes = {        
         "🪸 Ван пис":"onepiece_data",
@@ -1287,8 +1286,6 @@ async def process_callback(callback_query: types.CallbackQuery):
             )
         )
         
-
-
 
 @dp.callback_query_handler(lambda c: c.data.startswith("craft_"))
 async def use_craft(callback_query: types.CallbackQuery):
@@ -1519,6 +1516,46 @@ async def alternative_payment(callback_query: types.CallbackQuery):
         disable_web_page_preview=True
     )
     
+@rate_limit(0.5)
+@dp.callback_query_handler(lambda c: c.data.startwith("admin"))
+async def admin_callback_handler(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    await callback_query.answer()
+
+    action = callback_query.split("_")[1]
+
+    if action == "back":
+        await callback_query.message.edit_text("👋", reply_markup=get_main_keyboard())
+        
+    elif action == "update":
+
+        user_id = callback_query.from_user.id
+        admin_data = db.admins.find_one({"user_id":user_id})
+
+        # Check if the user is authorized
+        if not admin_data or admin_data.get("role") != "owner":
+            await callback_query.answer("🚫 Вы не авторизованы или не являетесь администратором.")
+            return
+
+        await callback_query.answer("🔄 Обновление бота... Пожалуйста подождите.")
+
+        # Pull latest changes from GitHub
+        try:
+            result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+            git_output = result.stdout
+        except subprocess.CalledProcessError as e:
+            await callback_query.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+            return
+
+        await callback_query.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+        # Restart the bot
+        if git_output != "Already up to date.":
+            try:
+                await callback_query.answer("♻️ Перезапускаю бота...")
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            except Exception as e:
+                await callback_query.answer(f"❌ Не удалось перезапустить бота:\n{e}")
 
 # Run the Bot
 if __name__ == "__main__":
