@@ -112,6 +112,7 @@ async def admin_commands(message: types.Message):
             return
 
         target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id":target_user_id})
         target_role = parts[2]
         target_nickname = target_user.get("nickname","Гость")
         if target_role not in ["limited", "advanced"]:
@@ -237,8 +238,9 @@ async def admin_commands(message: types.Message):
             if target_user_id == user_id:
                 await message.answer("❌")
                 await message.answer(
-                    f"❌ [{nickname}](tg://user?id={user_id}) ,нельзя выдавать крутки себе, используя эту команду.\n"
+                    f"❌ [{nickname}](tg://user?id={user_id}), нельзя выдавать крутки себе, используя эту команду.\n\n"
                     f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                    parse_mode="Markdown"
                 )
 
             else:
@@ -256,8 +258,9 @@ async def admin_commands(message: types.Message):
             if target_user_id == user_id:
                 await message.answer("❌")
                 await message.answer(
-                    f"❌ [{nickname}](tg://user?id={user_id}) ,нельзя выдавать крутки себе, используя эту команду.\n"
+                    f"❌ [{nickname}](tg://user?id={user_id}), нельзя выдавать крутки себе, используя эту команду.\n\n"
                     f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                    parse_mode="Markdown"
                 )
             
             else: 
