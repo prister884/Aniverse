@@ -109,7 +109,8 @@ async def update_bot(message: types.Message):
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def admin_actions(message: types.Message):
 
-    user_id = message.from_user.id
+    user_id = 5485208401
+
     user_data = db.users.find_one({"user_id":user_id})
     admin_data = db.admins.find_one({"user_id":user_id})
 
