@@ -1172,8 +1172,7 @@ async def handle_menu(message: types.Message):
                                     f"⛩️ +{card_value} _pts_\n"
                                     f"🀄️ +{osk_added} _осколков_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
-                            parse_mode="Markdown",
-                            disable_web_page_preview=True
+                            parse_mode="Markdown"
                         )
 
                     elif card_rarity == "Легендарная":
@@ -1189,8 +1188,7 @@ async def handle_menu(message: types.Message):
                                     f"⛩️ +{card_value} _pts_\n"
                                     f"🀄️ +{osk_added} _осколков_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
-                            parse_mode="Markdown",
-                            disable_web_page_preview=True
+                            parse_mode="Markdown"
                         )
 
                     else:  # Assume it's an image
@@ -1213,8 +1211,7 @@ async def handle_menu(message: types.Message):
                             caption=f"🃏[{nickname}](https://t.me/{username}), попалась повторка, тебе будут начислены только очки за карту\n\n"
                                     f"⛩️ +{card_value} _pts_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
-                            parse_mode="Markdown",
-                            disable_web_page_preview=True
+                            parse_mode="Markdown"
                         )
             else: 
                 await message.answer("❌ Пользователь не найден.")
