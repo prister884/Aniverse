@@ -80,8 +80,7 @@ dp = Dispatcher(bot)
 
 
 @rate_limit(2)
-@dp.message_handler(commands=["update"])
-async def update_bot(message: types.Message):
+async def update_bot(message):
     user_id = message.from_user.id
     admin_data = db.admins.find_one({"user_id":user_id})
 
