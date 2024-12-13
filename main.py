@@ -86,7 +86,7 @@ async def update_bot(message: types.Message):
     admin_data = db.admins.find_one({"user_id":user_id})
 
     # Check if the user is authorized
-    if not admin_data or admin_data.get("role") != "owner":
+    if not admin_data or (admin_data.get("role") != "owner" and admin_data.get("role") != "advanced"):
         await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
         return
 
@@ -1121,7 +1121,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 await message.answer(
-                    f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься лимитированный администратором.\n \n"
+                    f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься продвинутым администратором.\n \n"
                     f"✅ Тебе доступны продвинутые функции:\n \n"
                     f"🔹 `Выдать себе крутки`\n"
                     f"🔹 `Выдать себе пасс`\n"
