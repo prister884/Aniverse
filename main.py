@@ -79,7 +79,6 @@ async def update_bot(message: types.Message):
     user_id = message.from_user.id
     admin_data = db.admins.find_one({"user_id":user_id})
 
-
     # Check if the user is authorized
     if not admin_data or admin_data.get("role") != "owner":
         await message.reply("🚫 Вы не авторизованы или не являетесь администратором.")
@@ -106,25 +105,36 @@ async def update_bot(message: types.Message):
             await message.reply(f"❌ Не удалось перезапустить бота:\n{e}")
 
 # Main Menu Keyboard
-def get_main_keyboard():
+def get_main_keyboard(user_id="none"):
 
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    keyboard.add(
-        KeyboardButton("🥡 Получить карту"),
-        KeyboardButton("🃏 Мои карты")
-    )
-    keyboard.add(
-        KeyboardButton("☁ Меню"),
-        KeyboardButton("⚙ Настройки")
-    )
+    
+    
+    admin_data = db.admins.find_one({"user_id":user_id})
 
-    admin_data = db.admins.find_one({"user_id":5485208401})
+    if not admin_data:
+        keyboard.add(
+            KeyboardButton("🥡 Получить карту"),
+            KeyboardButton("🃏 Мои карты")
+        )
+        keyboard.add(
+            KeyboardButton("☁ Меню"),
+            KeyboardButton("⚙ Настройки")
+        )
 
-    if admin_data:
+    else: 
+        keyboard.add(
+            KeyboardButton("🥡 Получить карту"),
+            KeyboardButton("🃏 Мои карты")
+        )
+        keyboard.add(
+            KeyboardButton("☁ Меню"),
+            KeyboardButton("⚙ Настройки")
+        )
         keyboard.add(
             KeyboardButton("😎 Админ панель")
         )
-        
+
     return keyboard
 
 # Inline Keyboard for Welcome Screen
@@ -946,9 +956,10 @@ async def handle_menu(message: types.Message):
     elif "админ панель" in user_input:
 
         admin_data = db.admins.find_one({"user_id":user_id})
+        admins = db.admins.find()
         admin_role = admin_data.get("role")
         
-        if not admin_data:
+        if user_id not in admins:
             await message.answer(f"🚫 [{nickname}](tg://user?id={user_id}), вы не являетесь администратором бота.", parse_mode="Markdown")
 
         else: 
@@ -964,6 +975,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1006,6 +1018,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1056,6 +1069,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="💹 Статистика", callback_data="admin_stats")
                 )
 
@@ -1078,7 +1092,6 @@ async def handle_menu(message: types.Message):
                     parse_mode="Markdown", 
                     reply_markup=keyboard
                 )
-
 
     else:
         # Unknown command, ignore or send a generic response
