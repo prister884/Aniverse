@@ -84,7 +84,7 @@ async def update_bot(message: types.Message):
         await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
         return
 
-    await message.answer("🔄 Обноваление бота... Пожалуйста подождите.")
+    await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
 
     # Pull latest changes from GitHub
     try:
