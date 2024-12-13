@@ -48,11 +48,11 @@ def rate_limit(limit=1):
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
 # MongoDB connection
-client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://abdurazzoqov057:YphGIIaGnFWHI1Ja@cluster0.m0r1q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client.aniverse_db  # Use your database name
 
 # Bot Token
-BOT_TOKEN = "7934666713:AAGzvsNfe8K6BhISbL-fwUDeltItz-v6Gmw"
+BOT_TOKEN = "7934666713:AAFbgdmmSEYY-MGSmSmUAEIYvZVTG8tdbSk"
 
 # Initialize Bot and Dispatcher
 bot = Bot(token=BOT_TOKEN)
