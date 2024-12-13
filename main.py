@@ -116,7 +116,7 @@ async def admin_commands(message: types.Message):
 
     elif message.text == "/add_admin":
 
-        c_data = db.users.find_one({"user_id":parts[1]})
+        c_data = db.users.find_one({"user_id":int(parts[1])})
 
         if not c_data:
 
