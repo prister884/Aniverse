@@ -81,28 +81,28 @@ async def update_bot(message: types.Message):
 
     # Check if the user is authorized
     if not admin_data or admin_data.get("role") != "owner":
-        await message.reply("🚫 Вы не авторизованы или не являетесь администратором.")
+        await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
         return
 
-    await message.reply("🔄 Обноваление бота... Пожалуйста подождите.")
+    await message.answer("🔄 Обноваление бота... Пожалуйста подождите.")
 
     # Pull latest changes from GitHub
     try:
         result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
         git_output = result.stdout
     except subprocess.CalledProcessError as e:
-        await message.reply(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+        await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
         return
 
-    await message.reply(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+    await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
 
     # Restart the bot
     if git_output != "Already up to date.":
         try:
-            await message.reply("♻️ Перезапускаю бота...")
+            await message.answer("♻️ Перезапускаю бота...")
             os.execl(sys.executable, sys.executable, *sys.argv)
         except Exception as e:
-            await message.reply(f"❌ Не удалось перезапустить бота:\n{e}")
+            await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
 
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
