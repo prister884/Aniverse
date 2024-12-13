@@ -345,10 +345,6 @@ async def admin_commands(message: types.Message):
 
             
 
-
-
-
-
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
 
@@ -421,11 +417,12 @@ async def start(message: types.Message):
         nickname = user_data.get("nickname", "Гость")
         username = user_data.get("username")
         await message.answer(
-            f"👋 [{nickname}](https://t.me/{username}, добро пожаловать во вселенную Aniverse card.\n\n"
+            f"👋 [{nickname}](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
             f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе \n\n"
             f"🌏 Вселенные будут постоянно обновляться и улучшаться",
             parse_mode="Markdown",
-            reply_markup=get_main_keyboard(user_id)  # Display main menu keyboard
+            reply_markup=get_main_keyboard(user_id),
+            disable_web_page_preview=True  # Display main menu keyboard
         )
 
 
@@ -566,10 +563,12 @@ async def back_to(callback_query: types.CallbackQuery):
             return
 
         await callback_query.message.edit_text(
-            "👋 Добро пожаловать в Aniverse card! Для начала выбери вселенную.",
-            reply_markup=get_welcome_buttons(),
+            f"👋 [{nickname}](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
+            f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе \n\n"
+            f"🌏 Вселенные будут постоянно обновляться и улучшаться",
             parse_mode="Markdown",
-            disable_web_page_preview=True
+            reply_markup=get_main_keyboard(user_id),
+            disable_web_page_preview=True  # Display main menu keyboard
         )
 
     elif back_type == "aniverse":
