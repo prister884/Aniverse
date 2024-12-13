@@ -321,6 +321,14 @@ async def admin_commands(message: types.Message):
                         parse_mode="Markdown",
                         disable_web_page_preview=True
                     )
+        
+        else: 
+            await message.answer("❌")
+            await message.answer(
+                f"[{user_id}](https://t.me/{username}), введите команду в формате: `/give_spin <user_id> <количество>`.\n",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
 
     elif message.text.startswith("/self_spin"):
         
@@ -332,6 +340,14 @@ async def admin_commands(message: types.Message):
 
         spin_chances = int(parts[1])
         limit = admin_data.get("spins")
+
+        if len[parts] < 2 or parts[1].isnumeric == False:
+            await message.answer("❌")
+            await message.answer(
+                f"[{user_id}](https://t.me/{username}), введите команду в формате: `/self_spin <количество>`.\n",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
 
         if admin_role == "owner":
             db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
@@ -373,8 +389,6 @@ async def admin_commands(message: types.Message):
                 f"😉 Ваш оставшийся лимит: {self_spins}.",
                 parse_mode="Markdown"
             )
-
-
 
             
 
@@ -912,18 +926,14 @@ async def craft_all(message: types.Message):
             if parts[2] == "осколки": 
                 craft_type = "осколков"
                 craft = "осколки"
-                craft_remainder = осколки - (осколки//10)
                 craft_amount = (осколки//10)*1
             elif parts[2] == "обычные":
-                craft_remainder = обычные - (обычные//10)
                 craft_amount = (обычные//10)*1
                 craft = "обычные"
             elif parts[2] == "редкие":
-                craft_remainder = редкие - (редкие//10)
                 craft_amount = (редкие//10)*2
                 craft = "редкие"
             elif parts[2] == "эпические":
-                craft_remainder = эпические - (эпические//10)
                 craft_amount = (эпические//10)*4
                 craft = "эпические"
             
@@ -944,7 +954,7 @@ async def craft_all(message: types.Message):
                 db.users.update_one(
                     {"user_id": user_id},
                     {"$set":{
-                        f"{craft}":(user_data.get(parts[2])-((user_data.get(parts[2]))-craft_remainder)),
+                        f"{craft}":craft_amount*10,
                         "spin_chances":user_data.get("spin_chances")+craft_amount
                     }}
                 )
@@ -952,7 +962,7 @@ async def craft_all(message: types.Message):
                 await message.answer(
                     f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно\n"
                     f"➖➖➖➖➖➖\n"
-                    f"🧱 Потрачено {craft_type}: {user_data.get(parts[2])-craft_remainder} {emojis[parts[2]]}"
+                    f"🧱 Потрачено {craft_type}: {craft_amount*10} {emojis[parts[2]]}\n"
                     f"🌌 Получено круток: {craft_amount} 🃏",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
