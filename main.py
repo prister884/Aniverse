@@ -126,7 +126,7 @@ async def admin_commands(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
                 return
             
-            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":0, "spins":0})
+            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":500, "spins":10000})
             await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
@@ -189,10 +189,86 @@ async def admin_commands(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
                 return
             
-            db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role}})
+            limit = "no_limit" if new_role != "limited" else "10000"
+
+            db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit}})
             await message.answer(f"✅ Роль пользователя [{target_nickname}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
+        
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+    
+    elif message.text.startswith("/give_spin"):
+
+        target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id":target_user_id})
+
+        users_spin_chances = target_user.get("spin_chances", 0)
+        target_nickname = target_user.get("nickname","Гость")
+
+        spin_chances = int(parts[2])
+        limit = admin_data.get("spins")
+
+        if admin_role == "owner":
+            db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+
+            await message.answer("✅")
+            await message.answer(
+                f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                parse_mode="Markdown"
+            )
+
+
+        elif admin_role == "advanced":
+
+            if target_user_id == user_id:
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ [{nickname}](tg://user?id={user_id}) ,нельзя выдавать крутки себе, используя эту команду.\n"
+                    f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                )
+
+            else:
+                db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+                await message.answer("✅")
+                await message.answer(
+                    f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                    parse_mode="Markdown"
+                )
+
+        elif admin_role == "limited":
+
+            if target_user_id == user_id:
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ [{nickname}](tg://user?id={user_id}) ,нельзя выдавать крутки себе, используя эту команду.\n"
+                    f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                )
+            
+            else: 
+
+                if limit - spin_chances:
+
+                    db.admins.update_one({"user_id":user_id}, {"$set":{"spin":(limit-spin_chances)}})
+                    db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+                    await message.answer("✅")
+                    await message.answer(
+                        f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                        parse_mode="Markdown"
+                    )
+
+                else:
+                    await message.answer("❌")
+                    await message.answer(
+                        f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                        parse_mode="Markdown"
+                    )
+
+
+
+
 
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
