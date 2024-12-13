@@ -1094,7 +1094,7 @@ async def handle_menu(message: types.Message):
                 )
 
     elif "назад" in user_input:
-        await message.message.answer("👋", reply_markup=get_main_keyboard())
+        await message.answer("👋", reply_markup=get_main_keyboard())
 
     # else:
     #     # Unknown command, ignore or send a generic response
