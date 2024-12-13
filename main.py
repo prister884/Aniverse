@@ -79,36 +79,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 
-@rate_limit(2)
-@dp.message_handler(commands=["update"])
-async def update_bot(message: types.Message):
-    user_id = message.from_user.id
-    admin_data = db.admins.find_one({"user_id":user_id})
-
-    # Check if the user is authorized
-    if not admin_data or (admin_data.get("role") != "owner" and admin_data.get("role") != "advanced"):
-        await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
-        return
-
-    await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
-
-    # Pull latest changes from GitHub
-    try:
-        result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
-        git_output = result.stdout
-    except subprocess.CalledProcessError as e:
-        await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
-        return
-
-    await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
-
-    # Restart the bot
-    if git_output != "Already up to date.":
-        try:
-            await message.answer("♻️ Перезапускаю бота...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
-        except Exception as e:
-            await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
 
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
@@ -1241,6 +1211,32 @@ async def admin_message_handler(message: types.Message):
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
 
+@rate_limit(0.5)
+@dp.message_handler(commands=["promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update","give_spin", "give_pass"])
+async def admin_commands(message: types.Message):
+    
+    if message.text == "update":
+
+        await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
+
+        # Pull latest changes from GitHub
+        try:
+            result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+            git_output = result.stdout
+        except subprocess.CalledProcessError as e:
+            await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+            return
+
+        await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+        # Restart the bot
+        if git_output != "Already up to date.":
+            try:
+                await message.answer("♻️ Перезапускаю бота...")
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            except Exception as e:
+                await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
+    
 
 
 
