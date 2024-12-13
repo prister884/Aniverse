@@ -287,7 +287,7 @@ async def admin_commands(message: types.Message):
                     await message.answer("✅")
                     await message.answer(
                         f"Пользователю [{target_nickname}](https://t.me/{target_username} успешно выдали {spin_chances} круток.\n"
-                        f"Ваш лимит: {limit}.\n",
+                        f"😉 Ваш оставшийся лимит: {limit-spin_chances}.",
                         parse_mode="Markdown"
                     )
 
@@ -295,7 +295,7 @@ async def admin_commands(message: types.Message):
                     await message.answer("❌")
                     await message.answer(
                         f"Пользователю [{target_nickname}](https://t.me/{target_username} не удалось выдать {spin_chances} круток.\n"
-                        f"Ваш лимит: {limit}.\n",
+                        f"😉 Ваш оставшийся лимит: {limit}.",
                         parse_mode="Markdown"
                     )
 
@@ -329,8 +329,8 @@ async def admin_commands(message: types.Message):
 
                 await message.answer("✅")
                 await message.answer(
-                    f"✅ Вы выдали себе {spin_chances} круток.\n"
-                    f"Ваш оставшийся лимит: {self_spins-spin_chances}.\n",
+                    f"✅ Вы выдали себе {spin_chances} круток.\n\n"
+                    f"😉 Ваш оставшийся лимит: {self_spins-spin_chances}.",
                     parse_mode="Markdown"
                 )
 
@@ -338,8 +338,8 @@ async def admin_commands(message: types.Message):
 
                 await message.answer("❌")
                 await message.answer(
-                    f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n"
-                    f"Ваш оставшийся лимит: {self_spins-spin_chances}.\n",
+                    f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n\n"
+                    f"😉 Ваш оставшийся лимит: {self_spins}.",
                     parse_mode="Markdown"
                 )
 
