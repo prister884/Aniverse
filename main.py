@@ -247,7 +247,7 @@ async def admin_commands(message: types.Message):
                 disable_web_page_preview=True
             )
 
-            await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.")
+            await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
 
 
 
@@ -273,7 +273,7 @@ async def admin_commands(message: types.Message):
                     disable_web_page_preview=True
                 )
                 
-                await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.")
+                await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
 
 
         elif admin_role == "limited":
@@ -302,7 +302,7 @@ async def admin_commands(message: types.Message):
                         disable_web_page_preview=True
                     )
     
-                    await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.")
+                    await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
 
                 else:
                     await message.answer("❌")
