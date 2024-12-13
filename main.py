@@ -84,6 +84,10 @@ async def admin_commands(message: types.Message):
         await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
         return
     
+    if not admin_data:
+        await message.answer("❌ Вы не администратор или у вас недостаточно прав, чтобы выполнить эту команду.")
+        return
+
     admin_data = db.admins.find_one({"user_id": user_id})
     admin_role = admin_data.get("role", "limited")
     parts = message.text.strip().lower().split(" ")
