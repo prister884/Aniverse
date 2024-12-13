@@ -89,6 +89,7 @@ async def admin_commands(message: types.Message):
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
     target_user = db.users.find_one({"user_id":int(parts[1])})
+    new_role = parts[2]
 
     if message.text.startswith("/update"):
         if admin_role in ["owner", "advanced"]:
@@ -126,12 +127,12 @@ async def admin_commands(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
                 return
             
-            limit = "no_limit" if new_role != "limited" else 10000
+            limit = "no_limit" if target_role != "limited" else 10000
             
-            if new_role == "advanced":
+            if target_role == "advanced":
                 self_spins = 1000
 
-            elif new_role == "limited":
+            elif target_role == "limited":
                 self_spins = 500
 
             db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
