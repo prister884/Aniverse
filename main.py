@@ -1018,7 +1018,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1069,7 +1069,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
                     KeyboardButton(text="💹 Статистика", callback_data="admin_stats")
                 )
 
@@ -1093,9 +1093,9 @@ async def handle_menu(message: types.Message):
                     reply_markup=keyboard
                 )
 
-    else:
-        # Unknown command, ignore or send a generic response
-        await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
+    # else:
+    #     # Unknown command, ignore or send a generic response
+    #     await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
 
 universes = {        
         "🪸 Ван пис":"onepiece_data",
@@ -1526,7 +1526,7 @@ async def admin_callback_handler(callback_query: types.CallbackQuery):
 
     if action == "back":
         await callback_query.message.edit_text("👋", reply_markup=get_main_keyboard())
-        
+
     elif action == "update":
 
         user_id = callback_query.from_user.id
