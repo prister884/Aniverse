@@ -179,7 +179,7 @@ async def start(message: types.Message):
             f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе \n\n"
             f"🌏 Вселенные будут постоянно обновляться и улучшаться",
             parse_mode="Markdown",
-            reply_markup=get_main_keyboard()  # Display main menu keyboard
+            reply_markup=get_main_keyboard(user_id)  # Display main menu keyboard
         )
 
 
@@ -520,7 +520,7 @@ async def select_universe(callback_query: types.CallbackQuery):
         f"🥡 Чтобы получить карту, напиши команду \"`Получить карту`\".",
         parse_mode="Markdown",
         disable_web_page_preview=True,
-        reply_markup=get_main_keyboard()  # Show main keyboard after universe selection
+        reply_markup=get_main_keyboard(user_id)  # Show main keyboard after universe selection
     )
     
     # Delete the greeting message after a short delay (e.g., 2 seconds)
