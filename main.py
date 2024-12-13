@@ -959,7 +959,7 @@ async def handle_menu(message: types.Message):
         admins = db.admins.find()
         admin_role = admin_data.get("role")
         
-        if user_id not in admins:
+        if not admin_data:
             await message.answer(f"🚫 [{nickname}](tg://user?id={user_id}), вы не являетесь администратором бота.", parse_mode="Markdown")
 
         else: 
