@@ -631,10 +631,10 @@ async def admin_message_handler(message: types.Message):
         # Restart the bot
         if git_output != "Already up to date.":
             try:
-                await message.answer("♻️ Перезапускаю бота...")
+                await message.answer("♻️ Перезапускаю бота...", reply_markup=get_main_keyboard(user_id))
                 os.execl(sys.executable, sys.executable, *sys.argv)
             except Exception as e:
-                await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
+                await message.answer(f"❌ Не удалось перезапустить бота:\n{e}", reply_markup=get_main_keyboard(user_id))
 
     elif "назад" in user_input:
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
