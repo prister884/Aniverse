@@ -145,6 +145,7 @@ async def admin_commands(message: types.Message):
 
             db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
             await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(chat_id=target_user_id, text=f"✅ [{target_nickname}](https://t.me/{target_username}), ты теперь администратор этого бота. (Твой уровень: {target_role})")
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
@@ -183,12 +184,14 @@ async def admin_commands(message: types.Message):
             
             db.admins.find_one_and_delete({"user_id": target_user_id})
             await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) больше не является администратором.", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(chat_id=target_user_id, text=f"Ты больше не являешься администратором бота. 😔")
         
         elif admin_role == "advanced" and target_role in ["owner", "advanced"]:
 
             await message.answer("❌ Нельзя удалить администратора с ролью \"owner\" или \"advanced\".")
 
         else:
+
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
     elif message.text.startswith("/promote"):
@@ -220,6 +223,7 @@ async def admin_commands(message: types.Message):
 
             db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit, "self_spins":self_spins}})
             await message.answer(f"✅ Роль пользователя [{target_nickname}](https://t.me/{target_username}) изменена на \"{new_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(chat_id=target_user_id, text=f"✅ [{target_nickname}](https://t.me/{target_username}), тебя повысили до {target_role}. (Твой уровень: {target_role})")
         
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
