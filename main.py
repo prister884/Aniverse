@@ -592,55 +592,8 @@ async def change_nickname(message: types.Message):
         
         await message.answer(f"👤 Твой ник изменён на: {new_nickname}")
     else:
-        await admin_message_handler(message)
- 
-@rate_limit(0.5)
-@dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def admin_message_handler(message: types.Message):
-    user_id = message.from_user.id
-    user_data = db.users.find_one({"user_id": user_id})
-    admin_data = db.admins.find_one({"user_id": user_id})
-
-    user_input = message.text.strip().lower()
-
-    if not admin_data:
-        await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
-        return  # Stop further execution
-
-    elif "обновиться" in user_input:
-        user_id = message.from_user.id
-        admin_data = db.admins.find_one({"user_id":user_id})
-
-        # Check if the user is authorized
-        if not admin_data or admin_data.get("role") != "owner":
-            await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
-            return
-
-        await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
-
-        # Pull latest changes from GitHub
-        try:
-            result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
-            git_output = result.stdout
-        except subprocess.CalledProcessError as e:
-            await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
-            return
-
-        await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
-
-        # Restart the bot
-        if git_output != "Already up to date.":
-            try:
-                await message.answer("♻️ Перезапускаю бота...", reply_markup=get_main_keyboard(user_id))
-                os.execl(sys.executable, sys.executable, *sys.argv)
-            except Exception as e:
-                await message.answer(f"❌ Не удалось перезапустить бота:\n{e}", reply_markup=get_main_keyboard(user_id))
-
-    elif "назад" in user_input:
-        await message.answer("👋", reply_markup=get_main_keyboard(user_id))
-    else:
         await craft_all(message)
-
+ 
 @rate_limit(0.5)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def craft_all(message: types.Message):
@@ -1223,7 +1176,7 @@ async def handle_menu(message: types.Message):
                 await message.answer(
                     f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься владельцем бота.\n \n"
                     f"✅ Тебе доступны все функции:\n \n"
-                    f"🔹 `Выдать себе крутки`"
+                    f"🔹 `Выдать себе крутки`\n"
                     f"🔹 `Выдать себе пасс`\n"
                     f"🔹 `Выдать крутки`\n"
                     f"🔹 `Выдать пасс`\n"
@@ -1240,8 +1193,61 @@ async def handle_menu(message: types.Message):
                 )
 
     else:
+        await admin_message_handler(message)
+
+@rate_limit(0.5)
+@dp.message_handler(content_types=types.ContentTypes.TEXT)
+async def admin_message_handler(message: types.Message):
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    admin_data = db.admins.find_one({"user_id": user_id})
+
+    user_input = message.text.strip().lower()
+
+    if not admin_data:
+        await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
+        return  # Stop further execution
+
+    elif "обновиться" in user_input:
+        user_id = message.from_user.id
+        admin_data = db.admins.find_one({"user_id":user_id})
+
+        # Check if the user is authorized
+        if not admin_data or admin_data.get("role") != "owner":
+            await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
+            return
+
+        await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
+
+        # Pull latest changes from GitHub
+        try:
+            result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+            git_output = result.stdout
+        except subprocess.CalledProcessError as e:
+            await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+            return
+
+        await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+        # Restart the bot
+        if git_output != "Already up to date.":
+            try:
+                await message.answer("♻️ Перезапускаю бота...", reply_markup=get_main_keyboard(user_id))
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            except Exception as e:
+                await message.answer(f"❌ Не удалось перезапустить бота:\n{e}", reply_markup=get_main_keyboard(user_id))
+
+    elif "назад" in user_input:
+        await message.answer("👋", reply_markup=get_main_keyboard(user_id))
+    else:
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
+
+
+
+
+
+
 
 universes = {        
         "🪸 Ван пис":"onepiece_data",
@@ -1270,7 +1276,6 @@ universes = {
         "☄️ Драгонболл":"dragonball_data",
         "♟ Сололевелинг":"sololevelling_data"
     }
-
 
 
 
