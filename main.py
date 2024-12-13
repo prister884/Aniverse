@@ -975,7 +975,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1018,7 +1018,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
                 )
 
@@ -1069,7 +1069,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="admin_back"),
+                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
                     KeyboardButton(text="💹 Статистика", callback_data="admin_stats")
                 )
 
@@ -1092,6 +1092,9 @@ async def handle_menu(message: types.Message):
                     parse_mode="Markdown", 
                     reply_markup=keyboard
                 )
+
+    elif "назад" in user_input:
+        await message.message.answer("👋", reply_markup=get_main_keyboard())
 
     # else:
     #     # Unknown command, ignore or send a generic response
@@ -1524,10 +1527,7 @@ async def admin_callback_handler(callback_query: types.CallbackQuery):
 
     action = callback_query.split("_")[1]
 
-    if action == "back":
-        await callback_query.message.edit_text("👋", reply_markup=get_main_keyboard())
-
-    elif action == "update":
+    if action == "update":
 
         user_id = callback_query.from_user.id
         admin_data = db.admins.find_one({"user_id":user_id})
