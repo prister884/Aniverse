@@ -585,12 +585,7 @@ async def change_nickname(message: types.Message):
         db.users.update_one({"user_id": user_id}, {"$set": {"nickname": new_nickname}})
         
         await message.answer(f"👤 Твой ник изменён на: {new_nickname}")
-
-    # Continue with other menu options if "Сменить ник" is not detected
-    else:
-        await handle_menu(message)
-
-    
+ 
 @rate_limit(0.5)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def admin_message_handler(message: types.Message):
