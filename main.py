@@ -236,138 +236,138 @@ async def start(message: types.Message):
             )
 
 
-@rate_limit(1)
-@dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def admin_actions(message: types.Message):
+# @rate_limit(1)
+# @dp.message_handler(content_types=types.ContentTypes.TEXT)
+# async def admin_actions(message: types.Message):
 
-    user_id = 5485208401
+#     user_id = 5485208401
 
-    user_data = db.users.find_one({"user_id":user_id})
-    admin_data = db.admins.find_one({"user_id":user_id})
+#     user_data = db.users.find_one({"user_id":user_id})
+#     admin_data = db.admins.find_one({"user_id":user_id})
 
-    nickname = user_data.get("nickname","Гость")
-    admin_role = admin_data.get("role")
+#     nickname = user_data.get("nickname","Гость")
+#     admin_role = admin_data.get("role")
 
-    # Normalize the text to handle case-insensitive matches
-    user_input = message.text.strip().lower()
+#     # Normalize the text to handle case-insensitive matches
+#     user_input = message.text.strip().lower()
 
-    if not admin_data:
-        await message.answer(f"🚫 [{nickname}](tg://user?id={user_id}), вы не являетесь администратором бота.", parse_mode="Markdown")
+#     if not admin_data:
+#         await message.answer(f"🚫 [{nickname}](tg://user?id={user_id}), вы не являетесь администратором бота.", parse_mode="Markdown")
     
-    if "админ панель" in user_input:
+#     if "админ панель" in user_input:
 
-        keyboard = InlineKeyboardMarkup(row_width=3)
+#         keyboard = InlineKeyboardMarkup(row_width=3)
 
-        keyboard.add(
-            InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-            InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-            InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
-        )
+#         keyboard.add(
+#             InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
+#             InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
+#             InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+#         )
 
-        if admin_role == "limited":
+#         if admin_role == "limited":
 
-            keyboard.add(
-                InlineKeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
+#             )
 
-            await message.answer(
-                f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься лимитированный администратором.\n \n"
-                f"🟩 Тебе доступны следующие функции:\n"
-                f"🔹 `Выдать крутки`\n"
-                f"🔹 `Выдать пасс`\n \n"
-                f"❌ Тебе не доступны следующие функции:\n"
-                f"🔹 `Выдать себе крутки`\n"
-                f"🔹 `Выдать себе пасс`\n"
-                f"🔹 `Промокоды`\n"
-                f"🔹 `Пользователи`\n\n"
-                f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: `Уволиться`\n"
-                f"😊 _Желаю тебе хорошего настроения_ - [Владелец бота](https://t.me/donshirley)",
-                parse_mode="Markdown", 
-                reply_markup=keyboard
-            )
+#             await message.answer(
+#                 f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься лимитированный администратором.\n \n"
+#                 f"🟩 Тебе доступны следующие функции:\n"
+#                 f"🔹 `Выдать крутки`\n"
+#                 f"🔹 `Выдать пасс`\n \n"
+#                 f"❌ Тебе не доступны следующие функции:\n"
+#                 f"🔹 `Выдать себе крутки`\n"
+#                 f"🔹 `Выдать себе пасс`\n"
+#                 f"🔹 `Промокоды`\n"
+#                 f"🔹 `Пользователи`\n\n"
+#                 f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: `Уволиться`\n"
+#                 f"😊 _Желаю тебе хорошего настроения_ - [Владелец бота](https://t.me/donshirley)",
+#                 parse_mode="Markdown", 
+#                 reply_markup=keyboard
+#             )
         
-        elif admin_role == "advanced":
+#         elif admin_role == "advanced":
 
-            keyboard.add(
-                InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
+#                 InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
+#                 InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
-                InlineKeyboardButton(text="👤 Профиль администратора", callback_data="admin_profile")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
+#                 InlineKeyboardButton(text="👤 Профиль администратора", callback_data="admin_profile")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
-                InlineKeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
-                InlineKeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
+#                 InlineKeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
+#                 InlineKeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="😐 Пользователи", callback_data="admin_users"),
-                InlineKeyboardButton(text="📊 Статус бота", callback_data="admin_status"),
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="😐 Пользователи", callback_data="admin_users"),
+#                 InlineKeyboardButton(text="📊 Статус бота", callback_data="admin_status"),
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
+#             )
 
-            await message.answer(
-                f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься лимитированный администратором.\n \n"
-                f"🟩 Тебе доступны продвинутые функции:\n"
-                f"🔹 `Выдать себе крутки`\n"
-                f"🔹 `Выдать себе пасс`\n"
-                f"🔹 `Выдать крутки`\n"
-                f"🔹 `Выдать пасс`\n \n"
-                f"🔹 `Промокоды`\n"
-                f"🔹 `Пользователи`\n\n"
-                f"🔹 `Администраторы (Просмотр администраторов и владельца бота)` "
-                f"❌ Тебе не доступны следующие функции:\n"
-                f"🔹 `Администраторы (добавление администраторов)`\n"
-                f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)`\n\n"
-                f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: `Уволиться`\n"
-                f"😊 _Желаю тебе хорошего настроения_ - [Владелец бота](https://t.me/donshirley)",
-                parse_mode="Markdown", 
-                reply_markup=keyboard
-            )
+#             await message.answer(
+#                 f"👋 Привет, [{nickname}](tg://user?id={user_id}), ты являешься лимитированный администратором.\n \n"
+#                 f"🟩 Тебе доступны продвинутые функции:\n"
+#                 f"🔹 `Выдать себе крутки`\n"
+#                 f"🔹 `Выдать себе пасс`\n"
+#                 f"🔹 `Выдать крутки`\n"
+#                 f"🔹 `Выдать пасс`\n \n"
+#                 f"🔹 `Промокоды`\n"
+#                 f"🔹 `Пользователи`\n\n"
+#                 f"🔹 `Администраторы (Просмотр администраторов и владельца бота)` "
+#                 f"❌ Тебе не доступны следующие функции:\n"
+#                 f"🔹 `Администраторы (добавление администраторов)`\n"
+#                 f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)`\n\n"
+#                 f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: `Уволиться`\n"
+#                 f"😊 _Желаю тебе хорошего настроения_ - [Владелец бота](https://t.me/donshirley)",
+#                 parse_mode="Markdown", 
+#                 reply_markup=keyboard
+#             )
 
-        elif admin_role == "owner":
+#         elif admin_role == "owner":
 
-            keyboard.add(
-                InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
+#                 InlineKeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
+#                 InlineKeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
-                InlineKeyboardButton(text="👤 Профиль", callback_data="admin_profile")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
+#                 InlineKeyboardButton(text="👤 Профиль", callback_data="admin_profile")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
-                InlineKeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
-                InlineKeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
+#                 InlineKeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
+#                 InlineKeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="😐 Пользователи", callback_data="admin_promo"),
-                InlineKeyboardButton(text="📊 Статус бота", callback_data="admin_selfspins"),
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="😐 Пользователи", callback_data="admin_promo"),
+#                 InlineKeyboardButton(text="📊 Статус бота", callback_data="admin_selfspins"),
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="🔄 Обновиться", callback_data="admin_promo"),
-                InlineKeyboardButton(text="🔴 Выключить бота", callback_data="admin_selfspins"),
-                InlineKeyboardButton(text="🎆 Ивенты", callback_data="admin_selfpass")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="🔄 Обновиться", callback_data="admin_promo"),
+#                 InlineKeyboardButton(text="🔴 Выключить бота", callback_data="admin_selfspins"),
+#                 InlineKeyboardButton(text="🎆 Ивенты", callback_data="admin_selfpass")
+#             )
 
-            keyboard.add(
-                InlineKeyboardButton(text="💹 Статистика", callback_data="admin_retire")
-            )
+#             keyboard.add(
+#                 InlineKeyboardButton(text="💹 Статистика", callback_data="admin_retire")
+#             )
 
-        else: handle_menu(message)
+#         else: handle_menu(message)
 
 
 
