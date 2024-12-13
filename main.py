@@ -944,6 +944,8 @@ async def handle_menu(message: types.Message):
  
     elif "админ панель" in user_input:
 
+        print("data")
+
         admin_data = db.admins.find_one({"user_id":user_id})
         admin_role = admin_data.get("role")
         
