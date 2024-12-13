@@ -88,6 +88,7 @@ async def admin_commands(message: types.Message):
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
 
+
     if message.text.startswith("/update"):
         if admin_role in ["owner", "advanced"]:
             await message.answer("🔄 Обновление бота... Пожалуйста, подождите.")
@@ -100,7 +101,7 @@ async def admin_commands(message: types.Message):
                     await message.answer("♻️ Перезапускаю бота...")
                     os.execl(sys.executable, sys.executable, *sys.argv)
             except Exception as e:
-                await message.answer(f"❌ Не удалось обновить или перезапустить бота:\n{e}")
+                await message.answer(f"❌ Не удалось обновить бота:\n{e}")
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
@@ -111,18 +112,20 @@ async def admin_commands(message: types.Message):
 
         target_user_id = int(parts[1])
         target_role = parts[2]
+        target_nickname = target_user.get("nickname","Гость")
         if target_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
             return
 
         if admin_role in ["owner", "advanced"]:
             target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
             if not target_user:
                 await message.answer("❌ Пользователь не найден.")
                 return
             
             db.admins.insert_one({"user_id": target_user_id, "role": target_role})
-            await message.answer(f"✅ Пользователь [{target_user.get('nickname', 'Гость')}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
+            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
         else:
             await message.answer("🚫 Недостаточно прав.")
 
@@ -132,6 +135,7 @@ async def admin_commands(message: types.Message):
             return
         
         target_user_id = int(parts[1])
+        target_nickname = target_user.get("nickname","Гость")
         new_role = parts[2]
         if new_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
@@ -144,7 +148,7 @@ async def admin_commands(message: types.Message):
                 return
             
             db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role}})
-            await message.answer(f"✅ Роль пользователя [{target_user.get('nickname', 'Гость')}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
+            await message.answer(f"✅ Роль пользователя [{target_nickname}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
         else:
             await message.answer("🚫 Недостаточно прав.")
 
