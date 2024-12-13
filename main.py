@@ -678,19 +678,30 @@ async def craft_all(message: types.Message):
                 "эпические": "🐉",
             }
 
+            universes = {
+                "осколки": осколки,
+                "обычные": обычные,
+                "редкие": редкие,
+                "эпические": эпические
+            }
+
             if parts[2] == "осколки": 
                 craft_type = "осколков"
+                craft = осколки
                 craft_remainder = осколки - (осколки//10)
                 craft_amount = (осколки//10)*1
             elif parts[2] == "обычные":
                 craft_remainder = обычные - (обычные//10)
                 craft_amount = (обычные//10)*1
+                craft = обычные
             elif parts[2] == "редкие":
                 craft_remainder = редкие - (редкие//10)
                 craft_amount = (редкие//10)*2
+                craft = редкие
             elif parts[2] == "эпические":
                 craft_remainder = эпические - (эпические//10)
                 craft_amount = (эпические//10)*4
+                craft = эпические
             
             else:
                 await message.answer(
@@ -703,6 +714,15 @@ async def craft_all(message: types.Message):
                 )
 
             if craft_amount > 0:
+
+                db.users.update_one(
+                    {"user_id": user_id},
+                    {"$set":{
+                        f"universes[craft]":(user_data.get(parts[2])-user_data.get(parts[2])-craft_remainder),
+                        "spin_chances":user_data.get("spin_chances")+craft_amount
+                    }}
+                )
+
                 await message.answer(
                     f"♻️🥡 [{nickname}](tg://user?id={user_id}), крафт прошёл успешно\n"
                     f"➖➖➖➖➖➖\n"
@@ -1324,7 +1344,7 @@ async def process_callback(callback_query: types.CallbackQuery):
             f"┏⚡️ Обычные - {обычные}\n"
             f"┣✨ Редкие - {редкие}\n"
             f"┣🐉 Эпические - {эпические}\n"
-            f"┗🀄️ Осколки - {осколки}\n\n"
+            f"┗🀄️ Осколки - {осколки-10}\n\n"
             f"🍡 Стоимость крафтов\n"
             f"╔10 ⚡️ карт ➠ 1 попытка\n"
             f"╠10 ✨ карт ➠ 2 попытки\n"
@@ -1361,7 +1381,8 @@ async def process_callback(callback_query: types.CallbackQuery):
             f"🤝 Твоя ссылка: `{referral_link}` \n\n"
             f"📬 Такой возможностью можно воспользоваться не больше одного раза в сутки",
             parse_mode = "Markdown"
-        )        
+        )
+
     elif action == "change_universe":
         await callback_query.answer("Вы выбрали Сменить вселенную. Этот режим в процессе разработки. Вернитесь позже :(")
     elif action == "spin_bonuses":
