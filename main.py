@@ -192,13 +192,6 @@ async def admin_commands(message: types.Message):
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
-
-    elif message.text.startswith("/give_spins"):
-
-
-
-
-
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
 
