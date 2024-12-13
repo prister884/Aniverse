@@ -2,9 +2,29 @@ version: "3.8"
 
 services:
   mongodb:
-    image: mongo:8.0
+    image: mongo:6.0
     container_name: mongodb
+    restart: always
     ports:
-      - "27017:27017"
+      - "27017:27017" # Expose MongoDB on port 27017
     volumes:
-      - ./mongodb_data:/data/db
+      - mongodb_data:/data/db # Persistent storage for MongoDB
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root # Admin username
+      MONGO_INITDB_ROOT_PASSWORD: changemeplz2079 # Admin password
+
+  mongodb-compass:
+    image: ghcr.io/mongodb-js/compass:latest # Official Compass image
+    container_name: mongodb_compass
+    restart: always
+    ports:
+      - "8080:8080" # Access Compass through your browser (if supported by this image)
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: changemeplz2079
+
+volumes:
+  mongodb_data:
+    driver: local
