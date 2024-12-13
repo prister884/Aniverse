@@ -1125,7 +1125,7 @@ universes = {
 
     
 @rate_limit(0.5)
-@dp.callback_query_handler(content_types=types.ContentTypes.TEXT)
+@dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def admin_message_handler(message: types.Message):
     
     user_id = message.from_user.id
