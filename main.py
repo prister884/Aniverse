@@ -967,9 +967,9 @@ async def handle_menu(message: types.Message):
             if admin_role == "limited":
                 
                 keyboard.add(
-                    KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                    KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                    KeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+                    KeyboardButton(text="🌀 Выдать крутки"),
+                    KeyboardButton(text="🔑 Выдать пасс"),
+                    KeyboardButton(text="✍️ Написать сообщение владельцу")
                 )
 
                 keyboard.add(
@@ -996,28 +996,28 @@ async def handle_menu(message: types.Message):
             elif admin_role == "advanced":
 
                 keyboard.add(
-                    KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                    KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                    KeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+                    KeyboardButton(text="🌀 Выдать крутки"),
+                    KeyboardButton(text="🔑 Выдать пасс"),
+                    KeyboardButton(text="✍️ Написать сообщение владельцу")
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
+                    KeyboardButton(text="👮 Администраторы"),
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
-                    KeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
-                    KeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
+                    KeyboardButton(text="💬 Промокоды"),
+                    KeyboardButton(text="🌀 Выдать себе крутки"),
+                    KeyboardButton(text="🔑 Выдать себе пасс")
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="😐 Пользователи", callback_data="admin_users"),
+                    KeyboardButton(text="😐 Пользователи"),
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
-                    KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
+                    KeyboardButton(text="⬅️ Назад"),
+                    KeyboardButton(text="🍃 Уволиться")
                 )
 
                 await message.answer(
@@ -1042,33 +1042,33 @@ async def handle_menu(message: types.Message):
             elif admin_role == "owner":
 
                 keyboard.add(
-                    KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                    KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
+                    KeyboardButton(text="🌀 Выдать крутки"),
+                    KeyboardButton(text="🔑 Выдать пасс"),
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="👮 Администраторы", callback_data="admin_admins"),
+                    KeyboardButton(text="👮 Администраторы"),
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="💬 Промокоды", callback_data="admin_promo"),
-                    KeyboardButton(text="🌀 Выдать себе крутки", callback_data="admin_selfspins"),
-                    KeyboardButton(text="🔑 Выдать себе пасс", callback_data="admin_selfpass")
+                    KeyboardButton(text="💬 Промокоды"),
+                    KeyboardButton(text="🌀 Выдать себе крутки"),
+                    KeyboardButton(text="🔑 Выдать себе пасс")
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="😐 Пользователи", callback_data="admin_promo"),
+                    KeyboardButton(text="😐 Пользователи"),
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="🔄 Обновиться", callback_data="admin_update"),
-                    KeyboardButton(text="🔴 Выключить бота", callback_data="admin_stop"),
-                    KeyboardButton(text="🎆 Ивенты", callback_data="admin_events")
+                    KeyboardButton(text="🔄 Обновиться"),
+                    KeyboardButton(text="🔴 Выключить бота"),
+                    KeyboardButton(text="🎆 Ивенты")
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
-                    KeyboardButton(text="💹 Статистика", callback_data="admin_stats")
+                    KeyboardButton(text="⬅️ Назад"),
+                    KeyboardButton(text="💹 Статистика")
                 )
 
 
@@ -1091,12 +1091,9 @@ async def handle_menu(message: types.Message):
                     reply_markup=keyboard
                 )
 
-    elif "назад" in user_input:
-        await message.answer("👋", reply_markup=get_main_keyboard(user_id))
-
-    # else:
-    #     # Unknown command, ignore or send a generic response
-    #     await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
+    else:
+        # Unknown command, ignore or send a generic response
+        await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
 
 universes = {        
         "🪸 Ван пис":"onepiece_data",
@@ -1128,47 +1125,35 @@ universes = {
 
     
 @rate_limit(0.5)
-@dp.callback_query_handler(lambda c: c.data.startwith("admin_"))
-async def admin_callback_handler(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    await callback_query.answer()
+@dp.callback_query_handler(content_types=types.ContentTypes.TEXT)
+async def admin_message_handler(message: types.Message):
+    
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    nickname = user_data.get("nickname", "Гость")
+    spin_chances = user_data.get("spin_chances", 0)
+    player_status = user_data.get("player_status")
+    user_data = db.users.find_one({"user_id": user_id})
 
-    action = callback_query.split("_")[1]
+    admin_data = db.admins.find_one({"user_id":user_id})
 
-    print(action)
+    user_input = message.text.strip().lower()
 
-    if action == "update":
+    if not admin_data:
+        await message.answer(f"🚫 Вы не авторизованы или не являетесь администратором.")
 
-        user_id = callback_query.from_user.id
-        admin_data = db.admins.find_one({"user_id":user_id})
+    else:
+    
+        if "выдать крутки" in user_input:
+            await message.answer(
+                f"📝 Введите ID пользователя, кому выдадуться крутки",
+                parse_mode="Markdown"
+            )
 
-        # Check if the user is authorized
-        if not admin_data or admin_data.get("role") != "owner":
-            await callback_query.answer("🚫 Вы не авторизованы или не являетесь администратором.")
-            return
+        elif "назад" in user_input:
+            await message.answer("👋", reply_markup=get_main_keyboard(user_id))
 
-        await callback_query.answer("🔄 Обновление бота... Пожалуйста подождите.")
-
-        # Pull latest changes from GitHub
-        try:
-            result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
-            git_output = result.stdout
-        except subprocess.CalledProcessError as e:
-            await callback_query.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
-            return
-
-        await callback_query.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
-
-        # Restart the bot
-        if git_output != "Already up to date.":
-            try:
-                await callback_query.answer("♻️ Перезапускаю бота...")
-                os.execl(sys.executable, sys.executable, *sys.argv)
-            except Exception as e:
-                await callback_query.answer(f"❌ Не удалось перезапустить бота:\n{e}")
-
-
-
+        else: handle_menu(message)
 
 
 
