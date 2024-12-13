@@ -126,7 +126,15 @@ async def admin_commands(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
                 return
             
-            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":500, "spins":10000})
+            limit = "no_limit" if new_role != "limited" else 10000
+            
+            if new_role == "advanced":
+                self_spins = 1000
+
+            elif new_role == "limited":
+                self_spins = 500
+
+            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
             await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
@@ -191,7 +199,13 @@ async def admin_commands(message: types.Message):
             
             limit = "no_limit" if new_role != "limited" else "10000"
 
-            db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit}})
+            if new_role == "advanced":
+                self_spins = 1000
+
+            elif new_role == "limited":
+                self_spins = 500
+
+            db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit, "self_spins":self_spins}})
             await message.answer(f"✅ Роль пользователя [{target_nickname}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
         
         else:
