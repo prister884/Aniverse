@@ -253,7 +253,7 @@ async def admin_commands(message: types.Message):
             if target_user_id == user_id:
                 await message.answer("❌")
                 await message.answer(
-                    f"❌ [{nickname}](https://t.me/{username}, нельзя выдавать крутки себе, используя эту команду.\n\n"
+                    f"❌ [{nickname}](https://t.me/{username}), нельзя выдавать крутки себе, используя эту команду.\n\n"
                     f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
@@ -275,7 +275,7 @@ async def admin_commands(message: types.Message):
             if target_user_id == user_id:
                 await message.answer("❌")
                 await message.answer(
-                    f"❌ [{nickname}](https://t.me/{username}, нельзя выдавать крутки себе, используя эту команду.\n\n"
+                    f"❌ [{nickname}](https://t.me/{username}), нельзя выдавать крутки себе, используя эту команду.\n\n"
                     f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
@@ -649,7 +649,7 @@ async def back_to(callback_query: types.CallbackQuery):
 
 
         await callback_query.message.edit_text(
-            f"👤 Ник: [{nickname}](https://t.me/{username} \n"
+            f"👤 Ник: [{nickname}](https://t.me/{username}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
             f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
@@ -759,18 +759,18 @@ async def select_universe(callback_query: types.CallbackQuery):
     user_data = db.users.find_one({"user_id": user_id})
     nickname = user_data.get("nickname", "Гость")
     username = user_data.get("username")
-    user_link = f"[{nickname}](https://t.me/{username}"
+    user_link = f"[{nickname}](https://t.me/{username})"
 
     # Correct the keyboard and message
     await callback_query.message.edit_text(
-        f"🏔 [{nickname}](https://t.me/{username}, твоя выбранная вселенная: {universe_name}.\n ➖➖➖➖➖➖ \n"
+        f"🏔 [{nickname}](https://t.me/{username}), твоя выбранная вселенная: {universe_name}.\n ➖➖➖➖➖➖ \n"
         f"🥡 Чтобы получить карту, напиши команду \"`Получить карту`\".",
         parse_mode="Markdown",
         disable_web_page_preview=True,
     )
     
     await callback_query.message.answer(
-        f"🏔 [{nickname}](https://t.me/{username}, твоя выбранная вселенная: {universe_name}.\n ➖➖➖➖➖➖ \n"
+        f"🏔 [{nickname}](https://t.me/{username}), твоя выбранная вселенная: {universe_name}.\n ➖➖➖➖➖➖ \n"
         f"🥡 Чтобы получить карту, напиши команду \"`Получить карту`\".",
         parse_mode="Markdown",
         disable_web_page_preview=True,
@@ -863,7 +863,7 @@ async def craft_all(message: types.Message):
         if len(parts) < 3 or len(parts) > 3:
 
             await message.answer(
-                f"ℹ️ [{nickname}](https://t.me/{username}, чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
+                f"ℹ️ [{nickname}](https://t.me/{username}), чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
                 f"🧤 Примеры команд:\n"
                 f"➤ `Крафт вся осколки`\n"
                 f"➤ `Крафт вся обычные`\n"
@@ -902,7 +902,7 @@ async def craft_all(message: types.Message):
             
             else:
                 await message.answer(
-                    f"ℹ️ [{nickname}](https://t.me/{username}, чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
+                    f"ℹ️ [{nickname}](https://t.me/{username}), чтобы скрафтить крутки сразу из всех материалов, пиши команду \"крафт вся [осколки/обычные/редкие/эпические]\". \n\n"
                     f"🧤 Примеры команд:\n"
                     f"➤ `Крафт вся осколки`\n"
                     f"➤ `Крафт вся обычные`\n"
@@ -923,7 +923,7 @@ async def craft_all(message: types.Message):
                 )
 
                 await message.answer(
-                    f"♻️🥡 [{nickname}](https://t.me/{username}, крафт прошёл успешно\n"
+                    f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно\n"
                     f"➖➖➖➖➖➖\n"
                     f"🧱 Потрачено {craft_type}: {user_data.get(parts[2])-craft_remainder} {emojis[parts[2]]}"
                     f"🌌 Получено круток: {craft_amount} 🃏",
@@ -932,7 +932,7 @@ async def craft_all(message: types.Message):
                 )
             else: 
                 await message.answer(
-                    f"🌀 [{nickname}](https://t.me/{username}, недостаточно материалов для крафта.",
+                    f"🌀 [{nickname}](https://t.me/{username}), недостаточно материалов для крафта.",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
                 )
@@ -1129,7 +1129,7 @@ async def handle_menu(message: types.Message):
 
                         await message.answer_animation(
                             open(card_img_url, "rb"),
-                            caption=f"🧩🃏 Вау, [{nickname}](https://t.me/{username}, попалась мифическая повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
+                            caption=f"🧩🃏 Вау, [{nickname}](https://t.me/{username}), попалась мифическая повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
                                     f"⛩️ +{card_value} _pts_\n"
                                     f"🀄️ +{osk_added} _осколков_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
@@ -1146,7 +1146,7 @@ async def handle_menu(message: types.Message):
 
                         await message.answer_photo(
                             card_img_url,
-                            caption=f"🩸🃏 Ого, [{nickname}](https://t.me/{username}, попалась легендарная повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
+                            caption=f"🩸🃏 Ого, [{nickname}](https://t.me/{username}), попалась легендарная повторка! Тебе будут начислены очки за карту, а также осколки\n\n"
                                     f"⛩️ +{card_value} _pts_\n"
                                     f"🀄️ +{osk_added} _осколков_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
@@ -1171,7 +1171,7 @@ async def handle_menu(message: types.Message):
 
                         await message.answer_photo(
                             card_img_url,
-                            caption=f"🃏[{nickname}](https://t.me/{username}, попалась повторка, тебе будут начислены только очки за карту\n\n"
+                            caption=f"🃏[{nickname}](https://t.me/{username}), попалась повторка, тебе будут начислены только очки за карту\n\n"
                                     f"⛩️ +{card_value} _pts_\n\n"
                                     f"💠 Всего очков: {seasonal_points+card_value} pts",
                             parse_mode="Markdown",
@@ -1181,7 +1181,7 @@ async def handle_menu(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
         else: 
             await message.answer(
-                f"🃏🙅‍♂ [{nickname}](https://t.me/{username}, получать карточки можно раз в 4 часа. Приходи через:\n"
+                f"🃏🙅‍♂ [{nickname}](https://t.me/{username}), получать карточки можно раз в 4 часа. Приходи через:\n"
                 f"➖➖➖➖➖➖\n"
                 f"⏳ {remaining_hours}ч. {remaining_minutes}м. {remaining_seconds}с",
                 parse_mode="Markdown",
@@ -1194,7 +1194,7 @@ async def handle_menu(message: types.Message):
             
         if cards_count == 0:
                     
-            await message.answer(f"🃏🙆 [{nickname}](https://t.me/{username}, на данный момент у тебя нет карт", parse_mode="Markdown",disable_web_page_preview=True)
+            await message.answer(f"🃏🙆 [{nickname}](https://t.me/{username}), на данный момент у тебя нет карт", parse_mode="Markdown",disable_web_page_preview=True)
 
         else: 
             keyboard_cards = InlineKeyboardMarkup(row_width=1)
@@ -1211,7 +1211,7 @@ async def handle_menu(message: types.Message):
                     
             # Handle "Мои карты"
             await message.answer(
-                f"💬 [{nickname}](https://t.me/{username}, какие карты хочешь просмотреть?",
+                f"💬 [{nickname}](https://t.me/{username}), какие карты хочешь просмотреть?",
                 reply_markup=keyboard_cards, 
                 parse_mode="Markdown",
                 disable_web_page_preview=True
@@ -1262,7 +1262,7 @@ async def handle_menu(message: types.Message):
 
 
         await message.answer(
-            f"👤 Ник: [{nickname}](https://t.me/{username} \n"
+            f"👤 Ник: [{nickname}](https://t.me/{username}) \n"
             f"🗺️ Вселенная: {universe_cut} \n"
             f"🃏 Всего карт: {cards_count} из {maximum[0]}\n"
             f"🎖️ Сезонные очки: {seasonal_points} _pts_ \n"
@@ -1314,7 +1314,7 @@ async def handle_menu(message: types.Message):
         admin_role = admin_data.get("role")
         
         if not admin_data:
-            await message.answer(f"🚫 [{nickname}](https://t.me/{username}, вы не являетесь администратором бота.", parse_mode="Markdown",disable_web_page_preview=True)
+            await message.answer(f"🚫 [{nickname}](https://t.me/{username}), вы не являетесь администратором бота.", parse_mode="Markdown",disable_web_page_preview=True)
 
         else: 
 
@@ -1334,7 +1334,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}, ты являешься лимитированный администратором.\n \n"
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься лимитированный администратором.\n \n"
                     f"✅ Тебе доступны следующие функции:\n \n"
                     f"🔹 `Выдать крутки`\n"
                     f"🔹 `Выдать пасс`\n\n"
@@ -1377,7 +1377,7 @@ async def handle_menu(message: types.Message):
                 )
 
                 await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}, ты являешься продвинутым администратором.\n \n"
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься продвинутым администратором.\n \n"
                     f"✅ Тебе доступны продвинутые функции:\n \n"
                     f"🔹 `Выдать себе крутки`\n"
                     f"🔹 `Выдать себе пасс`\n"
@@ -1429,7 +1429,7 @@ async def handle_menu(message: types.Message):
 
 
                 await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}, ты являешься владельцем бота.\n \n"
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься владельцем бота.\n \n"
                     f"✅ Тебе доступны все функции:\n \n"
                     f"🔹 `Выдать себе крутки`\n"
                     f"🔹 `Выдать себе пасс`\n"
@@ -1599,7 +1599,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         )
 
         await callback_query.message.edit_text(
-            f"🍙 [{nickname}](https://t.me/{username}, ты можешь скрафтить попытки из повторок и осколков\n\n"
+            f"🍙 [{nickname}](https://t.me/{username}), ты можешь скрафтить попытки из повторок и осколков\n\n"
             f"🌀 Твои повторки и осколки\n"
             f"┏⚡️ Обычные - {обычные}\n"
             f"┣✨ Редкие - {редкие}\n"
@@ -1635,7 +1635,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         username = user_data.get("username")
         
         await callback_query.message.answer(
-            f"🔗 [{nickname}](https://t.me/{username}, приводи друзей в игру по своей ссылке и получай за это приятные бонусы \n\n"
+            f"🔗 [{nickname}](https://t.me/{username}), приводи друзей в игру по своей ссылке и получай за это приятные бонусы \n\n"
             f"🌅 За каждых трёх приведённых друзей ты получишь 1 попытку \n\n"
             f"🍙 Привёл игроков: {referral_count}\n"
             f"🪄 Получил попыток: {ref_spins}\n"
@@ -1722,7 +1722,7 @@ async def use_craft(callback_query: types.CallbackQuery):
             if обычные>=10:
                 db.users.update_one({"user_id":user_id},{"$set":{"обычные":обычные-10,"spin_chances":spin_chances+1}})
                 await callback_query.message.answer(
-                    f"♻️🥡 [{nickname}](https://t.me/{username}, крафт прошёл успешно:\n"
+                    f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
                     f"_10 ⚡️ карт ➠ 1 попытка_\n",
                     parse_mode="Markdown",
@@ -1735,7 +1735,7 @@ async def use_craft(callback_query: types.CallbackQuery):
             if редкие>=10:
                 db.users.update_one({"user_id":user_id},{"$set":{"редкие":редкие-10,"spin_chances":spin_chances+2}})
                 await callback_query.message.answer(
-                    f"♻️🥡 [{nickname}](https://t.me/{username}, крафт прошёл успешно:\n"
+                    f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
                     f"_10 ✨ карт ➠ 2 попытка_\n",
                     parse_mode="Markdown",
@@ -1748,7 +1748,7 @@ async def use_craft(callback_query: types.CallbackQuery):
             if эпические>=10:
                 db.users.update_one({"user_id":user_id},{"$set":{"эпические":эпические-10,"spin_chances":spin_chances+4}})
                 await callback_query.message.answer(
-                    f"♻️🥡 [{nickname}](https://t.me/{username}, крафт прошёл успешно:\n"
+                    f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
                     f"_10 🐉 карт ➠ 4 попытка_\n",
                     parse_mode="Markdown",
@@ -1761,7 +1761,7 @@ async def use_craft(callback_query: types.CallbackQuery):
             if осколки>=10:
                 db.users.update_one({"user_id":user_id},{"$set":{"осколки":осколки-10,"spin_chances":spin_chances+1}})
                 await callback_query.message.answer(
-                    f"♻️🥡 [{nickname}](https://t.me/{username}, крафт прошёл успешно:\n"
+                    f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно:\n"
                     f"➖➖➖➖➖➖\n"
                     f"_10 🀄️ осколков ➠ 1 попытка_\n",
                     parse_mode="Markdown",
@@ -1826,11 +1826,11 @@ async def claim_spins(callback_query: types.CallbackQuery):
 
             # Send success message
             message = (
-                f"🧸 [{nickname}](https://t.me/{username}, ты успешно выполнил задание. Тебе начислено:\n"
+                f"🧸 [{nickname}](https://t.me/{username}), ты успешно выполнил задание. Тебе начислено:\n"
                 f"➖➖➖➖➖➖\n"
                 f"{reward_spins} 🃏 круток"
                 if reward_осколки == 0
-                else f"🧸 [{nickname}](https://t.me/{username}, ты успешно выполнил задание. Тебе начислено:\n"
+                else f"🧸 [{nickname}](https://t.me/{username}), ты успешно выполнил задание. Тебе начислено:\n"
                 f"➖➖➖➖➖➖\n"
                 f"{reward_spins} 🃏 круток и {reward_осколки} 🀄️ осколков",
             )
