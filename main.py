@@ -13,6 +13,10 @@ import asyncio
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils.exceptions import Throttled
 from functools import wraps
+import subprocess
+import sys
+import os
+
 
 
 class ThrottlingMiddleware(BaseMiddleware):
@@ -47,8 +51,10 @@ def rate_limit(limit=1):
 
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
+# mongodb+srv://abdurazzoqov057:YphGIIaGnFWHI1Ja@cluster0.m0r1q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
 # MongoDB connection
-client = MongoClient("mongodb+srv://abdurazzoqov057:YphGIIaGnFWHI1Ja@cluster0.m0r1q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client.aniverse_db  # Use your database name
 
 # Bot Token
@@ -60,6 +66,46 @@ dp = Dispatcher(bot)
 
 
 dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
+
+
+# Initialize bot and dispatcher
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot)
+
+
+@rate_limit(2)
+@dp.message_handler(commands=["update"])
+async def update_bot(message: types.Message):
+    user_id = message.from_user.id
+    admin_data = db.admins.find_one({"user_id":user_id})
+
+
+    # Check if the user is authorized
+    if not admin_data or admin_data.get("role") != "owner":
+        await message.reply("🚫 Вы не авторизованы")
+        return
+
+    await message.reply("🔄 Обноваление бота... Пожалуйста подождите.")
+
+    # Pull latest changes from GitHub
+    try:
+        result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+        git_output = result.stdout
+    except subprocess.CalledProcessError as e:
+        await message.reply(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+        return
+
+    await message.reply(f"✅ Обновления синхронизированы:\n```\n{git_output}\n```", parse_mode="Markdown")
+
+    # Restart the bot
+    try:
+        await message.reply("♻️ Перезапускаю бота...")
+        os.execl(sys.executable, sys.executable, *sys.argv)
+    except Exception as e:
+        await message.reply(f"❌ Не удалось перезапустить бота:\n{e}")
+
+
+
 
 # Main Menu Keyboard
 def get_main_keyboard():
