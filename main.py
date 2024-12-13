@@ -1216,7 +1216,7 @@ async def admin_commands(message: types.Message):
     admin_role = admin_data.get("role","limited")
     parts = message.text.strip().lower().split(" ")
     nickname = user_data.get("nickname", "Гость")
-    c_data = db.users
+    c_data = db.users.find_one(parts[1])
 
     if not user_data:
 
