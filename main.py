@@ -594,34 +594,29 @@ async def change_nickname(message: types.Message):
 @rate_limit(0.5)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def admin_message_handler(message: types.Message):
-    
     user_id = message.from_user.id
     user_data = db.users.find_one({"user_id": user_id})
-    nickname = user_data.get("nickname", "Гость")
-    spin_chances = user_data.get("spin_chances", 0)
-    player_status = user_data.get("player_status")
-    user_data = db.users.find_one({"user_id": user_id})
+    admin_data = db.admins.find_one({"user_id": user_id})
 
-    admin_data = db.admins.find_one({"user_id":user_id})
+    # Debugging: Log the message content for clarity
+    print(f"Received message: {message.text}")
 
     user_input = message.text.strip().lower()
 
-    print(message.text)
-
     if not admin_data:
-        await message.answer(f"🚫 Вы не авторизованы или не являетесь администратором.")
+        await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
+        return  # Stop further execution
 
+    if "выдать крутки" in user_input:
+        await message.answer(
+            "📝 Введите ID пользователя, кому выдадуться крутки",
+            parse_mode="Markdown"
+        )
+    elif "назад" in user_input:
+        await message.answer("👋", reply_markup=get_main_keyboard(user_id))
     else:
-        if "выдать крутки" in user_input:
-            await message.answer(
-                f"📝 Введите ID пользователя, кому выдадуться крутки",
-                parse_mode="Markdown"
-            )
-
-        elif "назад" in user_input:
-            await message.answer("👋", reply_markup=get_main_keyboard(user_id))
-
-        else: handle_menu(message)
+        # Ensure handle_menu is awaited if it's async
+        await handle_menu(message)
 
 
 @rate_limit(0.5)
