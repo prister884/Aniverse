@@ -141,7 +141,7 @@ async def admin_commands(message: types.Message):
                 self_spins = 1000
 
             elif target_role == "limited":
-                self_spins = 500
+                self_spins = 0
 
             db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
             await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
@@ -343,7 +343,7 @@ async def admin_commands(message: types.Message):
             )
 
 
-        elif admin_role in ["limited", "advanced"]:
+        elif admin_role in ["advanced"]:
 
             if self_spins>=spin_chances:
 
@@ -365,6 +365,16 @@ async def admin_commands(message: types.Message):
                     f"😉 Ваш оставшийся лимит: {self_spins}.",
                     parse_mode="Markdown"
                 )
+
+        else: 
+            await message.answer("❌")
+            await message.answer(
+                f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n\n"
+                f"😉 Ваш оставшийся лимит: {self_spins}.",
+                parse_mode="Markdown"
+            )
+
+
 
             
 
