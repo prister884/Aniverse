@@ -639,7 +639,6 @@ async def admin_message_handler(message: types.Message):
     elif "назад" in user_input:
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
     else:
-        # Ensure handle_menu is awaited if it's async
         await craft_all(message)
 
 @rate_limit(0.5)
@@ -656,7 +655,7 @@ async def craft_all(message: types.Message):
     редкие = user_data.get("редкие", 0)
     эпические = user_data.get("эпические", 0)
 
-    if message.lower().startswith("крафт вся"):
+    if message.text.lower().startswith("крафт вся"):
         parts = message.text.split(maxsplit=2)
 
         if len(parts) < 3 or len(parts) > 3:
@@ -717,8 +716,7 @@ async def craft_all(message: types.Message):
                     parse_mode="Markdown"
                 )
 
-
-    else: handle_menu(message)
+    else: await handle_menu(message)
 
 
 @rate_limit(0.5)
