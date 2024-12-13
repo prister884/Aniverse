@@ -88,7 +88,7 @@ async def admin_commands(message: types.Message):
 
         await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
 
-    if message.text == "update":
+    if message.text == "/update":
 
         if admin_role == "owner" or admin_role == "advanced":
             await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
@@ -114,7 +114,7 @@ async def admin_commands(message: types.Message):
         else: 
             await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
 
-    elif message.text == "add_admin":
+    elif message.text == "/add_admin":
 
         c_data = db.users.find_one(parts[1])
         if not c_data:
@@ -137,9 +137,10 @@ async def admin_commands(message: types.Message):
         else: 
             await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
   
-    elif message.text == "promote":  
+    elif message.text == "/promote":  
         
         c_data = db.users.find_one(parts[1])
+        
         if not c_data:
 
             await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
