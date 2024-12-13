@@ -608,7 +608,7 @@ async def admin_message_handler(message: types.Message):
         return  # Stop further execution
 
     elif "обновиться" in user_input:
-        update_bot("update")
+        update_bot(user_input)
     elif "назад" in user_input:
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
     else:
