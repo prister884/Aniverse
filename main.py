@@ -98,11 +98,12 @@ async def update_bot(message: types.Message):
     await message.reply(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
 
     # Restart the bot
-    try:
-        await message.reply("♻️ Перезапускаю бота...")
-        os.execl(sys.executable, sys.executable, *sys.argv)
-    except Exception as e:
-        await message.reply(f"❌ Не удалось перезапустить бота:\n{e}")
+    if git_output != "Already up to date.":
+        try:
+            await message.reply("♻️ Перезапускаю бота...")
+            os.execl(sys.executable, sys.executable, *sys.argv)
+        except Exception as e:
+            await message.reply(f"❌ Не удалось перезапустить бота:\n{e}")
 
 # Main Menu Keyboard
 def get_main_keyboard():
