@@ -16,8 +16,14 @@ from functools import wraps
 import subprocess
 import sys
 import os
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
 
+class TaskFlow(StatesGroup):
+    WaitingForTaskType = State()
+    WaitingForId = State()  
+    WaitingForAmount = State()
 
 class ThrottlingMiddleware(BaseMiddleware):
     def __init__(self, default_rate_limit=1):
@@ -595,20 +601,14 @@ async def admin_message_handler(message: types.Message):
     user_data = db.users.find_one({"user_id": user_id})
     admin_data = db.admins.find_one({"user_id": user_id})
 
-    # Debugging: Log the message content for clarity
-    print(f"Received message: {message.text}")
-
     user_input = message.text.strip().lower()
 
     if not admin_data:
         await message.answer("🚫 Вы не авторизованы или не являетесь администратором.")
         return  # Stop further execution
 
-    if "выдать крутки" in user_input:
-        await message.answer(
-            "📝 Введите ID пользователя, кому выдадуться крутки",
-            parse_mode="Markdown"
-        )
+    elif "обновиться" in user_input:
+        update_bot("update")
     elif "назад" in user_input:
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
     else:
