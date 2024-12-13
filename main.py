@@ -82,7 +82,7 @@ async def update_bot(message: types.Message):
 
     # Check if the user is authorized
     if not admin_data or admin_data.get("role") != "owner":
-        await message.reply("🚫 Вы не авторизованы")
+        await message.reply("🚫 Вы не авторизованы или не являетесь администратором.")
         return
 
     await message.reply("🔄 Обноваление бота... Пожалуйста подождите.")
@@ -95,7 +95,7 @@ async def update_bot(message: types.Message):
         await message.reply(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
         return
 
-    await message.reply(f"✅ Обновления синхронизированы:\n```\n{git_output}\n```", parse_mode="Markdown")
+    await message.reply(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
 
     # Restart the bot
     try:
