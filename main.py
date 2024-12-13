@@ -116,7 +116,8 @@ async def admin_commands(message: types.Message):
 
     elif message.text == "/add_admin":
 
-        c_data = db.users.find_one(parts[1])
+        c_data = db.users.find_one({"user_id":parts[1]})
+
         if not c_data:
 
             await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
@@ -139,8 +140,8 @@ async def admin_commands(message: types.Message):
   
     elif message.text == "/promote":  
         
-        c_data = db.users.find_one(parts[1])
-        
+        c_data = db.users.find_one({"user_id":parts[1]})
+
         if not c_data:
 
             await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
