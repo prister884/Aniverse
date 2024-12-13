@@ -923,6 +923,8 @@ async def craft_all(message: types.Message):
                 "эпические": "🐉",
             }
 
+            craft_type = "повторок"
+
             if parts[2] == "осколки": 
                 craft_type = "осколков"
                 craft = "осколки"
