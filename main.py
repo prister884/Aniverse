@@ -606,11 +606,12 @@ async def admin_message_handler(message: types.Message):
 
     user_input = message.text.strip().lower()
 
+    print(message.text)
+
     if not admin_data:
         await message.answer(f"🚫 Вы не авторизованы или не являетесь администратором.")
 
     else:
-    
         if "выдать крутки" in user_input:
             await message.answer(
                 f"📝 Введите ID пользователя, кому выдадуться крутки",
