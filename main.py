@@ -715,7 +715,7 @@ async def change_nickname(message: types.Message):
         await handle_menu(message)
 
 
-@rate_limit(1)
+@rate_limit(0.5)
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def handle_menu(message: types.Message):
     """
