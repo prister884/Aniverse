@@ -74,7 +74,7 @@ dp = Dispatcher(bot)
 
 
 @rate_limit(0.5)
-@dp.message_handler(commands=["unban", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass"])
+@dp.message_handler(commands=["unban", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
 async def admin_commands(message: types.Message):
 
     user_id = message.from_user.id
@@ -106,6 +106,7 @@ async def admin_commands(message: types.Message):
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
     elif message.text.startswith("/add_admin"):
+
         if len(parts) < 3:
             await message.answer("❌ Укажите команду в формате: /add_admin <user_id> <role>")
             return
@@ -124,10 +125,49 @@ async def admin_commands(message: types.Message):
                 await message.answer("❌ Пользователь не найден.")
                 return
             
-            db.admins.insert_one({"user_id": target_user_id, "role": target_role})
+            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":0, "spins":0})
             await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
         else:
-            await message.answer("🚫 Недостаточно прав.")
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
+    elif message.text.startswith("/remove_admin"):
+        
+        if len(parts) < 2:
+            await message.answer("❌ Укажите команду в формате: /remove_admin <user_id>")
+            return
+
+        target_user_id = int(parts[1])
+        target_role = parts[2]
+        target_nickname = target_user.get("nickname","Гость")
+
+        if admin_role == "owner":
+            target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            db.admins.find_one_and_delete({"user_id": target_user_id})
+            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) больше не является администратором.", parse_mode="Markdown")
+        
+        elif admin_role == "advanced" and target_role not in ["owner", "limited"]:
+
+            target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            db.admins.find_one_and_delete({"user_id": target_user_id})
+            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) больше не является администратором.", parse_mode="Markdown")
+        
+        elif admin_role == "advanced" and target_role in ["owner", "advanced"]:
+
+            await message.answer("❌ Нельзя удалить администратора с ролью \"owner\" или \"advanced\".")
+
+        else:
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
     elif message.text.startswith("/promote"):
         if len(parts) < 3:
@@ -150,7 +190,12 @@ async def admin_commands(message: types.Message):
             db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role}})
             await message.answer(f"✅ Роль пользователя [{target_nickname}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
         else:
-            await message.answer("🚫 Недостаточно прав.")
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
+
+    elif message.text.startswith("/give_spins"):
+
+
 
 
 
