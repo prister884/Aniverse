@@ -671,30 +671,23 @@ async def craft_all(message: types.Message):
                 "эпические": "🐉",
             }
 
-            craftables = {
-                "осколки": осколки,
-                "обычные": обычные,
-                "редкие": редкие,
-                "эпические": эпические
-            }
-
             if parts[2] == "осколки": 
                 craft_type = "осколков"
-                craft = осколки
+                craft = "осколки"
                 craft_remainder = осколки - (осколки//10)
                 craft_amount = (осколки//10)*1
             elif parts[2] == "обычные":
                 craft_remainder = обычные - (обычные//10)
                 craft_amount = (обычные//10)*1
-                craft = обычные
+                craft = "обычные"
             elif parts[2] == "редкие":
                 craft_remainder = редкие - (редкие//10)
                 craft_amount = (редкие//10)*2
-                craft = редкие
+                craft = "редкие"
             elif parts[2] == "эпические":
                 craft_remainder = эпические - (эпические//10)
                 craft_amount = (эпические//10)*4
-                craft = эпические
+                craft = "эпические"
             
             else:
                 await message.answer(
@@ -711,7 +704,7 @@ async def craft_all(message: types.Message):
                 db.users.update_one(
                     {"user_id": user_id},
                     {"$set":{
-                        f"{craftables[craft]}":(user_data.get(parts[2])-(user_data.get(parts[2])-craft_remainder)),
+                        f"{craft}":(user_data.get(parts[2])-((user_data.get(parts[2]))-craft_remainder)),
                         "spin_chances":user_data.get("spin_chances")+craft_amount
                     }}
                 )
