@@ -1063,7 +1063,7 @@ async def handle_menu(message: types.Message):
 
         else: 
 
-            keyboard = ReplyKeyboardMarkup(row_width=3)
+            keyboard = ReplyKeyboardMarkup(row_width=3,resize_keyboard=True)
 
             if admin_role == "limited":
                 
