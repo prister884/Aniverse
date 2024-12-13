@@ -122,7 +122,7 @@ async def admin_actions(message: types.Message):
     if not admin_data:
         await message.answer(f"🚫 [{nickname}](tg://user?id={user_id}), вы не являетесь администратором бота.", parse_mode="Markdown")
     
-    else:
+    if "админ панель" in user_input:
 
         keyboard = InlineKeyboardMarkup(row_width=3)
 
@@ -235,8 +235,7 @@ async def admin_actions(message: types.Message):
                 InlineKeyboardButton(text="💹 Статистика", callback_data="admin_retire")
             )
 
-
-
+        else: handle_menu(message)
 
 
 # Main Menu Keyboard
@@ -256,7 +255,7 @@ def get_main_keyboard():
 
     if admin_data:
         keyboard.add(
-            KeyboardButton("😎 Админ")
+            KeyboardButton("😎 Админ панель")
         )
         
     return keyboard
