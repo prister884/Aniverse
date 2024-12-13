@@ -11,19 +11,20 @@ services:
       - mongodb_data:/data/db # Persistent storage for MongoDB
     environment:
       MONGO_INITDB_ROOT_USERNAME: root # Admin username
-      MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079@ # Admin password
+      MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079 # Admin password
 
-  mongodb-compass:
-    image: ghcr.io/mongodb-js/compass:latest # Official Compass image
-    container_name: mongodb_compass
-    restart: always
-    ports:
-      - "9090:8080" # Access Compass through your browser (if supported by this image)
-    depends_on:
-      - mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079@
+  # Uncomment this section after confirming proper image/tag
+  # mongodb-compass:
+  #   image: ghcr.io/mongodb-js/compass:latest
+  #   container_name: mongodb_compass
+  #   restart: always
+  #   ports:
+  #     - "9090:8080" # Access Compass through your browser (if supported by this image)
+  #   depends_on:
+  #     - mongodb
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079
 
   mongo-express:
     image: mongo-express
@@ -33,7 +34,7 @@ services:
       - "8181:8081" # Access the web UI at http://<server-ip>:8181
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: Changemeplz2079@
+      ME_CONFIG_MONGODB_ADMINPASSWORD: Changemeplz2079
       ME_CONFIG_MONGODB_SERVER: mongodb
 
   admin-mongo:
@@ -47,7 +48,7 @@ services:
       CONN_HOST: mongodb
       CONN_PORT: 27017
       CONN_USER: root
-      CONN_PASS: Changemeplz2079@
+      CONN_PASS: Changemeplz2079
 
 volumes:
   mongodb_data:
