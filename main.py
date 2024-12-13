@@ -74,7 +74,7 @@ dp = Dispatcher(bot)
 
 
 @rate_limit(0.5)
-@dp.message_handler(commands=["unban", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
+@dp.message_handler(commands=["unban", "remove_admin", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
 async def admin_commands(message: types.Message):
 
     user_id = message.from_user.id
