@@ -13,18 +13,17 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root # Admin username
       MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079 # Admin password
 
-  # Uncomment this section after confirming proper image/tag
-  # mongodb-compass:
-  #   image: ghcr.io/mongodb-js/compass:latest
-  #   container_name: mongodb_compass
-  #   restart: always
-  #   ports:
-  #     - "9090:8080" # Access Compass through your browser (if supported by this image)
-  #   depends_on:
-  #     - mongodb
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079
+  mongodb-compass:
+    image: ghcr.io/mongodb-js/compass:latest
+    container_name: mongodb_compass
+    restart: always
+    ports:
+      - "9090:8080" # Access Compass through your browser (if supported by this image)
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: Changemeplz2079
 
   mongo-express:
     image: mongo-express
