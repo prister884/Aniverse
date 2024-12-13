@@ -81,7 +81,7 @@ async def update_bot(message: types.Message):
 
 
     # Check if the user is authorized
-    if not admin_data or admin_data.get("role") != "owner" or admin_data.get("role") != "advanced":
+    if not admin_data or admin_data.get("role") != "owner":
         await message.reply("🚫 Вы не авторизованы или не являетесь администратором.")
         return
 
