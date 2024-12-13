@@ -73,6 +73,97 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 
+@rate_limit(0.5)
+@dp.message_handler(commands=["add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass"])
+async def admin_commands(message: types.Message):
+
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id":user_id})
+    admin_data = db.admins.find_one({"user_id":user_id})
+    admin_role = admin_data.get("role","limited")
+    parts = message.text.strip().lower().split(" ")
+    nickname = user_data.get("nickname", "Гость")
+    c_data = db.users.find_one(parts[1])
+
+    if not user_data:
+
+        await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
+
+    if message.text == "update":
+
+        if admin_role == "owner" or admin_role == "advanced":
+            await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
+
+            # Pull latest changes from GitHub
+            try:
+                result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+                git_output = result.stdout
+            except subprocess.CalledProcessError as e:
+                await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
+                return
+
+            await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+            # Restart the bot
+            if git_output != "Already up to date.":
+                try:
+                    await message.answer("♻️ Перезапускаю бота...")
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+                except Exception as e:
+                    await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
+
+        else: 
+            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
+
+    elif message.text == "add_admin":
+
+        if not c_data:
+
+            await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
+
+        if (admin_role == "owner" or admin_role == "advanced") and (parts[2] in ["limited", "advanced"]):
+
+            db.admins.insert_one({
+                "user_id":user_id,
+                "role": parts[2]
+            })
+
+            await message.answer(f"✅ Пользователь [{nickname}](tg://user?id={user_id}) теперь является \"{parts[2]}\"-администратором", parse_mode="Markdown")
+        
+        elif (admin_role == "owner" or admin_role == "advanced"):
+        
+            await message.answer(f"❌ Не удалось добавить пользователя [{nickname}](tg://user?id={user_id}), укажите валидную роль: `limited` или `advanced`", parse_mode="Markdown")
+    
+        else: 
+            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
+  
+    elif message.text == "promote":  
+
+        if not c_data:
+
+            await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
+
+        if (admin_role == "owner" or admin_role == "advanced") and (parts[2] in ["limited", "advanced"]):
+
+            db.admins.update_one({
+                {"user_id": message.from_user.id},
+                {"$set":{
+                    "user_id":parts[1],
+                    "role": parts[2]
+                }}
+            })
+
+            await message.answer(f"✅ Роль пользователя [{nickname}](tg://user?id={user_id}) повышен.", parse_mode="Markdown")
+            await message.answer(f"👤 Администратор \"{admin_role}\" уровня был утверждён на роль: \"{admin_role}\"-администратора", parse_mode="Markdown")
+        
+        elif (admin_role == "owner" or admin_role == "advanced"):
+        
+            await message.answer(f"❌ Не удалось сменить роль пользователя [{nickname}](tg://user?id={user_id}), укажите валидную роль: `limited` или `advanced`", parse_mode="Markdown")
+    
+        else: 
+            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
+
+
 
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
@@ -1204,104 +1295,6 @@ async def admin_message_handler(message: types.Message):
     else:
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
-
-@rate_limit(0.5)
-@dp.message_handler(commands=["add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass"])
-async def admin_commands(message: types.Message):
-
-
-    user_id = message.from_user.id
-    user_data = db.users.find_one({"user_id":user_id})
-    admin_data = db.admins.find_one({"user_id":user_id})
-    admin_role = admin_data.get("role","limited")
-    parts = message.text.strip().lower().split(" ")
-    nickname = user_data.get("nickname", "Гость")
-    c_data = db.users.find_one(parts[1])
-
-    if not user_data:
-
-        await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
-
-    if message.text == "update":
-
-        if admin_role == "owner" or admin_role == "advanced":
-            await message.answer("🔄 Обновление бота... Пожалуйста подождите.")
-
-            # Pull latest changes from GitHub
-            try:
-                result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
-                git_output = result.stdout
-            except subprocess.CalledProcessError as e:
-                await message.answer(f"❌ Не удалось получить обновления с GitHub:\n{e.stderr}")
-                return
-
-            await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
-
-            # Restart the bot
-            if git_output != "Already up to date.":
-                try:
-                    await message.answer("♻️ Перезапускаю бота...")
-                    os.execl(sys.executable, sys.executable, *sys.argv)
-                except Exception as e:
-                    await message.answer(f"❌ Не удалось перезапустить бота:\n{e}")
-
-        else: 
-            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
-
-    elif message.text == "add_admin":
-
-        if not c_data:
-
-            await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
-
-        if (admin_role == "owner" or admin_role == "advanced") and (parts[2] in ["limited", "advanced"]):
-
-            db.admins.insert_one({
-                "user_id":user_id,
-                "role": parts[2]
-            })
-
-            await message.answer(f"✅ Пользователь [{nickname}](tg://user?id={user_id}) теперь является \"{parts[2]}\"-администратором", parse_mode="Markdown")
-        
-        elif (admin_role == "owner" or admin_role == "advanced"):
-        
-            await message.answer(f"❌ Не удалось добавить пользователя [{nickname}](tg://user?id={user_id}), укажите валидную роль: `limited` или `advanced`", parse_mode="Markdown")
-    
-        else: 
-            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
-  
-    elif message.text == "promote":  
-
-        if not c_data:
-
-            await message.answer("❌ Пользователь не найден в базе данных, так что не может являтся администратором.")
-
-        if (admin_role == "owner" or admin_role == "advanced") and (parts[2] in ["limited", "advanced"]):
-
-            db.admins.update_one({
-                {"user_id": message.from_user.id},
-                {"$set":{
-                    "user_id":parts[1],
-                    "role": parts[2]
-                }}
-            })
-
-            await message.answer(f"✅ Роль пользователя [{nickname}](tg://user?id={user_id}) повышен.", parse_mode="Markdown")
-            await message.answer(f"👤 Администратор \"{admin_role}\" уровня был утверждён на роль: \"{admin_role}\"-администратора", parse_mode="Markdown")
-        
-        elif (admin_role == "owner" or admin_role == "advanced"):
-        
-            await message.answer(f"❌ Не удалось сменить роль пользователя [{nickname}](tg://user?id={user_id}), укажите валидную роль: `limited` или `advanced`", parse_mode="Markdown")
-    
-        else: 
-            await message.answer("🚫 Вы не являетесь администратором или у вас недостаточно прав, чтобы выполнить это действие")
-
-            
-
-
-
-
-
 
 
 
