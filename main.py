@@ -137,7 +137,7 @@ async def admin_commands(message: types.Message):
             return
 
         target_user_id = int(parts[1])
-        target_role = parts[2]
+        target_role = db.admins.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
 
         if admin_role == "owner":
