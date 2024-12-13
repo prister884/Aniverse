@@ -122,6 +122,7 @@ async def admin_commands(message: types.Message):
         target_user = db.users.find_one({"user_id":target_user_id})
         target_role = parts[2]
         target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
         if target_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
             return
@@ -129,6 +130,7 @@ async def admin_commands(message: types.Message):
         if admin_role in ["owner", "advanced"]:
             target_user = db.users.find_one({"user_id": target_user_id})
             target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
             if not target_user:
                 await message.answer("❌ Пользователь не найден.")
                 return
@@ -142,7 +144,7 @@ async def admin_commands(message: types.Message):
                 self_spins = 500
 
             db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
-            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username} добавлен как администратор \"{target_role}\".", parse_mode="Markdown")
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
@@ -156,28 +158,31 @@ async def admin_commands(message: types.Message):
         target_user = db.users.find_one({"user_id": target_user_id})
         target_role = db.admins.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
 
         if admin_role == "owner":
             target_user = db.users.find_one({"user_id": target_user_id})
             target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
             if not target_user:
                 await message.answer("❌ Пользователь не найден.")
                 return
             
             db.admins.find_one_and_delete({"user_id": target_user_id})
-            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) больше не является администратором.", parse_mode="Markdown")
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username} больше не является администратором.", parse_mode="Markdown")
         
         elif admin_role == "advanced" and target_role not in ["owner", "limited"]:
 
             target_user = db.users.find_one({"user_id": target_user_id})
             target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
 
             if not target_user:
                 await message.answer("❌ Пользователь не найден.")
                 return
             
             db.admins.find_one_and_delete({"user_id": target_user_id})
-            await message.answer(f"✅ Пользователь [{target_nickname}](tg://user?id={target_user_id}) больше не является администратором.", parse_mode="Markdown")
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username} больше не является администратором.", parse_mode="Markdown")
         
         elif admin_role == "advanced" and target_role in ["owner", "advanced"]:
 
@@ -193,6 +198,7 @@ async def admin_commands(message: types.Message):
         
         target_user_id = int(parts[1])
         target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
         new_role = parts[2]
         if new_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
@@ -213,7 +219,7 @@ async def admin_commands(message: types.Message):
                 self_spins = 500
 
             db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit, "self_spins":self_spins}})
-            await message.answer(f"✅ Роль пользователя [{target_nickname}](tg://user?id={target_user_id}) изменена на \"{new_role}\".", parse_mode="Markdown")
+            await message.answer(f"✅ Роль пользователя [{target_nickname}](https://t.me/{target_username} изменена на \"{new_role}\".", parse_mode="Markdown")
         
         else:
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
@@ -225,6 +231,7 @@ async def admin_commands(message: types.Message):
 
         users_spin_chances = target_user.get("spin_chances", 0)
         target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
 
         spin_chances = int(parts[2])
         limit = admin_data.get("spins")
@@ -235,7 +242,7 @@ async def admin_commands(message: types.Message):
 
             await message.answer("✅")
             await message.answer(
-                f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                f"Пользователю [{target_nickname}](https://t.me/{target_username} успешно выдали {spin_chances} круток.\n",
                 parse_mode="Markdown"
             )
 
@@ -256,7 +263,7 @@ async def admin_commands(message: types.Message):
 
                 await message.answer("✅")
                 await message.answer(
-                    f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n",
+                    f"Пользователю [{target_nickname}](https://t.me/{target_username} успешно выдали {spin_chances} круток.\n",
                     parse_mode="Markdown"
                 )
 
@@ -279,7 +286,7 @@ async def admin_commands(message: types.Message):
 
                     await message.answer("✅")
                     await message.answer(
-                        f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) успешно выдали {spin_chances} круток.\n"
+                        f"Пользователю [{target_nickname}](https://t.me/{target_username} успешно выдали {spin_chances} круток.\n"
                         f"Ваш лимит: {limit}.\n",
                         parse_mode="Markdown"
                     )
@@ -287,7 +294,7 @@ async def admin_commands(message: types.Message):
                 else:
                     await message.answer("❌")
                     await message.answer(
-                        f"Пользователю [{target_nickname}](tg://user?id={target_user_id}) не удалось выдать {spin_chances} круток.\n"
+                        f"Пользователю [{target_nickname}](https://t.me/{target_username} не удалось выдать {spin_chances} круток.\n"
                         f"Ваш лимит: {limit}.\n",
                         parse_mode="Markdown"
                     )
