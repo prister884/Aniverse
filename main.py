@@ -955,13 +955,13 @@ async def handle_menu(message: types.Message):
 
             keyboard = ReplyKeyboardMarkup(row_width=3)
 
-            keyboard.add(
-                KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
-                KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
-                KeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
-            )
-
             if admin_role == "limited":
+                
+                keyboard.add(
+                    KeyboardButton(text="🌀 Выдать крутки", callback_data="admin_spins"),
+                    KeyboardButton(text="🔑 Выдать пасс", callback_data="admin_pass"),
+                    KeyboardButton(text="✍️ Написать сообщение владельцу", callback_data="admin_message")
+                )
 
                 keyboard.add(
                     KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
@@ -1055,13 +1055,13 @@ async def handle_menu(message: types.Message):
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="🔄 Обновиться", callback_data="admin_promo"),
-                    KeyboardButton(text="🔴 Выключить бота", callback_data="admin_selfspins"),
-                    KeyboardButton(text="🎆 Ивенты", callback_data="admin_selfpass")
+                    KeyboardButton(text="🔄 Обновиться", callback_data="admin_update"),
+                    KeyboardButton(text="🔴 Выключить бота", callback_data="admin_stop"),
+                    KeyboardButton(text="🎆 Ивенты", callback_data="admin_events")
                 )
 
                 keyboard.add(
-                    KeyboardButton(text="💹 Статистика", callback_data="admin_retire")
+                    KeyboardButton(text="💹 Статистика", callback_data="admin_stats")
                 )
 
 
