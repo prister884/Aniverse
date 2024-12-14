@@ -19,7 +19,6 @@ import os
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-
 class ThrottlingMiddleware(BaseMiddleware):
     def __init__(self, default_rate_limit=1):
         super(ThrottlingMiddleware, self).__init__()
@@ -64,17 +63,17 @@ BOT_TOKEN = "7934666713:AAFbgdmmSEYY-MGSmSmUAEIYvZVTG8tdbSk"
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
+bot2 = Bot(token="7151266668:AAFHKpGJm6fE9tl8329Zz8KKlW2Dy4KTPqM")
+dp2 = Dispatcher(bot2)
 
 dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
-
 
 # Initialize bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
-
 @rate_limit(0.5)
-@dp.message_handler(commands=["unban", "remove_admin", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
+@dp2.message_handler(commands=["unban", "remove_admin", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
 async def admin_commands(message: types.Message):
 
     user_id = message.from_user.id
