@@ -340,9 +340,11 @@ async def admin_commands(message: types.Message):
             return
         
         target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
         target_username = target_user.get("username")
         new_role = parts[2]
+
         if new_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
             return
@@ -1673,6 +1675,10 @@ async def admin_message_handler(message: types.Message):
 
     elif "назад" in user_input:
         await message.answer("👋", reply_markup=get_main_keyboard(user_id))
+
+    elif "написать сообщение владельцу" in user_input:
+        await message.answer("Вы выбрали: написать сообщение владельцу.")
+    
     else:
         # Unknown command, ignore or send a generic response
         await message.answer("❓ Неизвестная команда. Пожалуйста, выберите доступный вариант из меню.")
