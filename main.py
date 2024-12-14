@@ -19,6 +19,7 @@ import os
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
+
 class ThrottlingMiddleware(BaseMiddleware):
     def __init__(self, default_rate_limit=1):
         super(ThrottlingMiddleware, self).__init__()
@@ -56,6 +57,7 @@ locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client.aniverse_db  # Use your database name
 
+
 # Bot Token
 BOT_TOKEN = "7934666713:AAFbgdmmSEYY-MGSmSmUAEIYvZVTG8tdbSk"
 
@@ -63,15 +65,334 @@ BOT_TOKEN = "7934666713:AAFbgdmmSEYY-MGSmSmUAEIYvZVTG8tdbSk"
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
-bot2 = Bot(token="7151266668:AAFHKpGJm6fE9tl8329Zz8KKlW2Dy4KTPqM")
-dp2 = Dispatcher(bot2)
 
 dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
+
 
 # Initialize bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
-                                                       
+
+
+@rate_limit(0.5)
+@dp.message_handler(commands=["unban", "remove_admin", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
+async def admin_commands(message: types.Message):
+
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    admin_data = db.admins.find_one({"user_id": user_id})
+
+    if not user_data:
+        await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
+        return
+    
+    if not admin_data:
+        await message.answer("❌ Вы не администратор или у вас недостаточно прав, чтобы выполнить эту команду.")
+        return
+
+    admin_data = db.admins.find_one({"user_id": user_id})
+    admin_role = admin_data.get("role", "limited")
+    parts = message.text.strip().lower().split(" ")
+    nickname = user_data.get("nickname", "Гость")
+    username = user_data.get("username")
+
+
+    if message.text.startswith("/update"):
+        if admin_role in ["owner", "advanced"]:
+            await message.answer("🔄 Обновление бота... Пожалуйста, подождите.")
+            try:
+                result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+                git_output = result.stdout.strip() or "No output from Git."
+                await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+                if git_output != "Already up to date.":
+                    await message.answer("♻️ Перезапускаю бота...")
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+            except Exception as e:
+                await message.answer(f"❌ Не удалось обновить бота:\n{e}")
+        else:
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
+    elif message.text.startswith("/add_admin"):
+
+        if len(parts) < 3:
+            await message.answer("❌ Укажите команду в формате: /add_admin <user_id> <role>")
+            return
+
+        target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id":target_user_id})
+        target_role = parts[2]
+        target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
+        if target_role not in ["limited", "advanced"]:
+            await message.answer("❌ Роль должна быть `limited` или `advanced`.")
+            return
+
+        if admin_role in ["owner", "advanced"]:
+            target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            limit = "no_limit" if target_role != "limited" else 10000
+            
+            if target_role == "advanced":
+                self_spins = 1000
+
+            elif target_role == "limited":
+                self_spins = 0
+
+            db.admins.insert_one({"user_id": target_user_id, "role": target_role, "self_spins":self_spins, "spins":limit})
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) добавлен как администратор \"{target_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(chat_id=target_user_id, text=f"✅ [{target_nickname}](https://t.me/{target_username}), ты теперь администратор этого бота. (Твой уровень: {target_role})", parse_mode="Markdown",disable_web_page_preview=True)
+        else:
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
+    elif message.text.startswith("/remove_admin"):
+        
+        if len(parts) < 2:
+            await message.answer("❌ Укажите команду в формате: /remove_admin <user_id>")
+            return
+
+        target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id": target_user_id})
+        target_role = db.admins.find_one({"user_id":target_user_id})
+        target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
+
+        if admin_role == "owner":
+            target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            db.admins.find_one_and_delete({"user_id": target_user_id})
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) больше не является администратором.", parse_mode="Markdown",disable_web_page_preview=True)
+        
+        elif admin_role == "advanced" and target_role not in ["owner", "limited"]:
+
+            target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
+
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            db.admins.find_one_and_delete({"user_id": target_user_id})
+            await message.answer(f"✅ Пользователь [{target_nickname}](https://t.me/{target_username}) больше не является администратором.", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(chat_id=target_user_id, text=f"[{target_nickname}](https://t.me/{target_username}), ты больше не являешься администратором бота. 😔", parse_mode="Markdown",disable_web_page_preview=True)
+        
+        elif admin_role == "advanced" and target_role in ["owner", "advanced"]:
+
+            await message.answer("❌ Нельзя удалить администратора с ролью \"owner\" или \"advanced\".")
+
+        else:
+
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
+    elif message.text.startswith("/promote"):
+        if len(parts) < 3:
+            await message.answer("❌ Укажите команду в формате: /promote <user_id> <role>")
+            return
+        
+        target_user_id = int(parts[1])
+        target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
+        new_role = parts[2]
+        if new_role not in ["limited", "advanced"]:
+            await message.answer("❌ Роль должна быть `limited` или `advanced`.")
+            return
+
+        if admin_role in ["owner", "advanced"]:
+            target_user = db.users.find_one({"user_id": target_user_id})
+            if not target_user:
+                await message.answer("❌ Пользователь не найден.")
+                return
+            
+            limit = "no_limit" if new_role != "limited" else "10000"
+
+            if new_role == "advanced":
+                self_spins = 1000
+
+            elif new_role == "limited":
+                self_spins = 500
+
+            db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit, "self_spins":self_spins}})
+            await message.answer(f"✅ Роль пользователя [{target_nickname}](https://t.me/{target_username}) изменена на \"{new_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
+            await bot.send_message(
+                chat_id=target_user_id, 
+                text=f"✅ [{target_nickname}](https://t.me/{target_username}), тебя повысили до {target_role}. (Твой уровень: {target_role})",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+        
+        else:
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+    
+    elif message.text.startswith("/give_spin"):
+
+        target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id":target_user_id})
+
+        users_spin_chances = target_user.get("spin_chances", 0)
+        target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
+
+        spin_chances = int(parts[2])
+        limit = admin_data.get("spins")
+
+        if admin_role == "owner":
+            db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+
+            await message.answer("✅")
+            await message.answer(
+                f"Пользователю [{target_nickname}](https://t.me/{target_username}) успешно выдали {spin_chances} круток.\n",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+            await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
+
+
+
+        elif admin_role == "advanced":
+
+            if target_user_id == user_id:
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ [{nickname}](https://t.me/{username}), нельзя выдавать крутки себе, используя эту команду.\n\n"
+                    f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+
+            else:
+
+                db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+                await message.answer("✅")
+                await message.answer(
+                    f"Пользователю [{target_nickname}](https://t.me/{target_username}) успешно выдали {spin_chances} круток.\n",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+                
+                await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
+
+
+        elif admin_role == "limited":
+
+            if target_user_id == user_id:
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ [{nickname}](https://t.me/{username}), нельзя выдавать крутки себе, используя эту команду.\n\n"
+                    f"🃏 Используйте команду `/self_spin <количество>` чтобы получить крутки для себя.\n",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+            
+            else: 
+
+                if limit - spin_chances >= 0:
+
+                    db.admins.update_one({"user_id":user_id}, {"$set":{"spin":(limit-spin_chances)}})
+                    db.users.update_one({"user_id":target_user_id},{"$set":{"spin_chances":users_spin_chances+spin_chances}})
+
+                    await message.answer("✅")
+                    await message.answer(
+                        f"Пользователю [{target_nickname}](https://t.me/{target_username}) успешно выдали {spin_chances} круток.\n"
+                        f"😉 Ваш оставшийся лимит: {limit-spin_chances}.",
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
+    
+                    await bot.send_message(chat_id=target_user_id, text=f"🃏 [{target_nickname}](https://t.me/{target_username}), администраторы бота выдали тебе {spin_chances} круток.", parse_mode="Markdown", disable_web_page_preview = True)
+
+                else:
+                    await message.answer("❌")
+                    await message.answer(
+                        f"Пользователю [{target_nickname}](https://t.me/{target_username}) не удалось выдать {spin_chances} круток.\n"
+                        f"😉 Ваш оставшийся лимит: {limit}.",
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
+        
+        else: 
+            await message.answer("❌")
+            await message.answer(
+                f"[{user_id}](https://t.me/{username}), введите команду в формате: `/give_spin <user_id> <количество>`.\n",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+    elif message.text.startswith("/self_spin"):
+        
+        user_id = message.from_user.id
+        user_data = db.users.find_one({"user_id":user_id})
+
+        us_spin_chances = user_data.get("spin_chances",0)
+        self_spins = admin_data.get("self_spins",0)
+
+        spin_chances = int(parts[1])
+        limit = admin_data.get("spins")
+
+        if len[parts] < 2 or parts[1].isnumeric == False:
+            await message.answer("❌")
+            await message.answer(
+                f"[{user_id}](https://t.me/{username}), введите команду в формате: `/self_spin <количество>`.\n",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+        if admin_role == "owner":
+            db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
+
+            await message.answer("✅")
+            await message.answer(
+                f"✅ Вы выдали себе {spin_chances} круток\n",
+                parse_mode="Markdown"
+            )
+
+
+        elif admin_role in ["advanced"]:
+
+            if self_spins>=spin_chances:
+
+                db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
+                db.admins.update_one({"user_id":user_id},{"$set":{"self_spins":self_spins-spin_chances}})                
+
+                await message.answer("✅")
+                await message.answer(
+                    f"✅ Вы выдали себе {spin_chances} круток.\n\n"
+                    f"😉 Ваш оставшийся лимит: {self_spins-spin_chances}.",
+                    parse_mode="Markdown"
+                )
+
+            else:
+
+                await message.answer("❌")
+                await message.answer(
+                    f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n\n"
+                    f"😉 Ваш оставшийся лимит: {self_spins}.",
+                    parse_mode="Markdown"
+                )
+
+        else: 
+            await message.answer("❌")
+            await message.answer(
+                f"❌ Не удалось выдать вам {spin_chances} круток, у вас не хватает лимита.\n\n"
+                f"😉 Ваш оставшийся лимит: {self_spins}.",
+                parse_mode="Markdown"
+            )
+
+            
+
 # Main Menu Keyboard
 def get_main_keyboard(user_id="none"):
 
