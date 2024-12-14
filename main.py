@@ -342,7 +342,7 @@ async def admin_commands(message: types.Message):
         spin_chances = int(parts[1])
         limit = admin_data.get("spins")
 
-        if len[parts] < 2 or parts[1].isnumeric == False:
+        if len[parts] < 2:
             await message.answer("❌")
             await message.answer(
                 f"[{user_id}](https://t.me/{username}), введите команду в формате: `/self_spin <количество>`.\n",
