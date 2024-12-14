@@ -963,10 +963,11 @@ async def craft_all(message: types.Message):
                     }}
                 )
 
+
                 await message.answer(
                     f"♻️🥡 [{nickname}](https://t.me/{username}), крафт прошёл успешно\n"
                     f"➖➖➖➖➖➖\n"
-                    f"🧱 Потрачено {craft_type}: {craft_amount*10} {emojis[parts[2]]}\n"
+                    f"🧱 Потрачено {craft_type}: {(craftable//10)*10} {emojis[parts[2]]}\n"
                     f"🌌 Получено круток: {craft_amount} 🃏",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
