@@ -1451,11 +1451,6 @@ async def handle_menu(message: types.Message):
 
     elif "настройки" in user_input:
 
-        # Handle "Настройки"
-
-        admin_data = db.admins.find_one({"user_id": user_id})
-        admin_role = admin_data.get("role", "limited")
-
         if player_status > 0:
             
             await message.answer(
