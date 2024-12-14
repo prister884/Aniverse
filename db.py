@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from config import MONGO_URI
 
-client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient(MONGO_URI)
 db = client.aniverse_db  # Use your database name

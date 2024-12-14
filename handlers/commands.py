@@ -1,18 +1,15 @@
 from config import BOT_TOKEN
-from rate_limit import ThrottlingMiddleware, rate_limit
+from rate_limit import rate_limit
 from db import db
 from keyboards.main_keyboard import get_main_keyboard
 from keyboards.welcome_button import get_welcome_buttons
-
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from dp import dp
+from craft import craft_all
+from aiogram import types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 import datetime
 
-
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
-dp.middleware.setup(ThrottlingMiddleware(default_rate_limit=2))
 
 
 @rate_limit(1)
@@ -110,3 +107,52 @@ async def start(message: types.Message):
                 parse_mode="Markdown",
                 disable_web_page_preview=True  # Disable link preview for greeting message
             )
+
+@rate_limit(1)
+async def leave_account(message: types.Message):
+    user_id = message.from_user.id
+
+    # Check if the user exists in the database
+    user_data = db.users.find_one({"user_id": user_id})
+    if not user_data:
+        await message.answer("❌ У вас нет активной учетной записи для удаления.")
+        return
+
+    # Delete the user's data from the database
+    db.users.delete_one({"user_id": user_id})
+    
+    await message.answer(
+        "✅ Ваша учетная запись успешно удалена. Спасибо за использование Aniverse card! "
+        "Если вы передумаете, вы всегда можете начать заново, используя команду /start."
+    )
+
+@rate_limit(1)
+async def change_nickname(message: types.Message):
+    """
+    Allow the user to change their nickname with a text input like:
+    Сменить ник НовыйНик
+    """
+    user_id = message.from_user.id
+    user_data = db.users.find_one({"user_id": user_id})
+    
+    if not user_data:
+        await message.answer("❌ Пожалуйста, сначала введите команду /start.")
+        return
+
+    # Check if the message starts with "Сменить ник"
+    if message.text.lower().startswith("сменить ник"):
+        # Extract the new nickname
+        parts = message.text.split(maxsplit=2)
+        if len(parts) < 3 or not parts[2].strip():
+            await message.answer("❌ Пожалуйста, укажите новый ник. Пример: Сменить ник НовыйНик")
+            return
+
+        new_nickname = parts[2].strip()
+
+        # Update the user's nickname in the database
+        db.users.update_one({"user_id": user_id}, {"$set": {"nickname": new_nickname}})
+        
+        await message.answer(f"👤 Твой ник изменён на: {new_nickname}")
+    else:
+        await craft_all(message)
+ 
