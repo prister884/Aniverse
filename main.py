@@ -840,7 +840,7 @@ async def back_to(callback_query: types.CallbackQuery):
 
         keys.add(
                 InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_aniverse_pass"),
-                InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment_completed")
+                InlineKeyboardButton(text="✅ Я оплатил", url="t.me/aniverseclone_don")
         )
         
         keys.add(
@@ -1449,7 +1449,9 @@ async def handle_menu(message: types.Message):
         admin_data = db.admins.find_one({"user_id": user_id})
         admin_role = admin_data.get("role", "limited")
 
-        nickname = f"{nickname+"(admin)" if admin_data else nickname}"
+        admin = "(admin)"
+
+        nickname = f"{nickname+admin if admin_data else nickname}"
 
         if player_status > 0:
             
@@ -2033,7 +2035,7 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
 
     keys.add(
             InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_aniverse_pass"),
-            InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment_completed")
+            InlineKeyboardButton(text="✅ Я оплатил", url="t.me/aniverseclone_don")
     )
         
     keys.add(
