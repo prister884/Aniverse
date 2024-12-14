@@ -32,7 +32,8 @@ async def handle_menu(message: types.Message):
     mythic_cards = len(cards[4])
     card_count = casual_cards+rare_cards+epic_cards+legendary_cards+mythic_cards
 
-    maximum = verse_data.get("maximum", [])
+    
+    maximum = verse_data.get("maximum", []) if verse_data else []
     maximum_casual = maximum[1]
     maximum_rare = maximum[2]
     maximum_epic = maximum[3]
