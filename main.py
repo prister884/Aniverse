@@ -97,128 +97,110 @@ async def admin_commands(message: types.Message):
     username = user_data.get("username")
 
     if message.text.startswith("/admin"):
+        admin_data = db.admins.find_one({"user_id": user_id})  # Fetch admin data
+        admins = db.admins.find()  # Fetch list of admins
 
-        admin_data = db.admins.find_one({"user_id":user_id})
-        admins = db.admins.find()
-        admin_role = admin_data.get("role")
-        
         if not admin_data:
-            await message.answer(f"🚫 [{nickname}](https://t.me/{username}), вы не являетесь администратором бота.", parse_mode="Markdown",disable_web_page_preview=True)
+            await message.answer(
+                f"🚫 [{nickname}](https://t.me/{username}), вы не являетесь администратором бота.",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+        else:
+            admin_role = admin_data.get("role")  # Get role after confirming admin_data exists
+            keyboard = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
 
-        else: 
-
-            keyboard = ReplyKeyboardMarkup(row_width=3,resize_keyboard=True)
-
+            # Limited admin functionality
             if admin_role == "limited":
-                
                 keyboard.add(
                     KeyboardButton(text="🌀 Выдать крутки"),
                     KeyboardButton(text="🔑 Выдать пасс"),
                     KeyboardButton(text="✍️ Написать сообщение владельцу")
                 )
-
-                keyboard.add(
-                    KeyboardButton(text="⬅️ Назад", callback_data="back"),
-                    KeyboardButton(text="🍃 Уволиться", callback_data="admin_retire")
-                )
-
-                await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься лимитированный администратором.\n \n"
-                    f"✅ Тебе доступны следующие функции:\n \n"
-                    f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
-                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количетсво дней>\n\n"
-                    f"❌ Тебе не доступны следующие функции:\n \n"
-                    f"🔹 `Выдать себе крутки`\n"
-                    f"🔹 `Выдать себе пасс`\n"
-                    f"🔹 `Промокоды`\n"
-                    f"🔹 `Пользователи`\n\n"
-                    f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: \"`Уволиться`\"",
-                    parse_mode="Markdown", 
-                    reply_markup=keyboard,
-                    disable_web_page_preview=True
-                )
-            
-            elif admin_role == "advanced":
-
-                keyboard.add(
-                    KeyboardButton(text="🌀 Выдать крутки"),
-                    KeyboardButton(text="🔑 Выдать пасс"),
-                    KeyboardButton(text="✍️ Написать сообщение владельцу")
-                )
-
-                keyboard.add(
-                    KeyboardButton(text="👮 Администраторы"),
-                )
-
-                keyboard.add(
-                    KeyboardButton(text="💬 Промокоды"),
-                    KeyboardButton(text="🌀 Выдать себе крутки"),
-                    KeyboardButton(text="🔑 Выдать себе пасс")
-                )
-
-                keyboard.add(
-                    KeyboardButton(text="😐 Пользователи"),
-                )
-
                 keyboard.add(
                     KeyboardButton(text="⬅️ Назад"),
                     KeyboardButton(text="🍃 Уволиться")
                 )
 
                 await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься продвинутым администратором.\n \n"
-                    f"✅ Тебе доступны продвинутые функции:\n \n"
-                    f"🔹 `Выдать себе крутки` - /self_spin <количество>\n"
-                    f"🔹 `Выдать себе пасс - /self_pass <количество дней>\n"
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься лимитированный администратором.\n\n"
+                    f"✅ Тебе доступны следующие функции:\n\n"
                     f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
-                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n"
-                    f"🔹 `Промокоды` - /promo\n"
-                    f"🔹 `Пользователи` - /users\n"
-                    f"🔹 `Администраторы (Просмотр администраторов и владельца бота) - /admins \n\n"
-                    f"❌ Тебе не доступны следующие функции:\n \n"
-                    f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)`\n\n"
+                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n\n"
+                    f"❌ Тебе не доступны следующие функции:\n\n"
+                    f"🔹 `Выдать себе крутки`\n"
+                    f"🔹 `Выдать себе пасс`\n"
+                    f"🔹 `Промокоды`\n"
+                    f"🔹 `Пользователи`\n\n"
                     f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: \"`Уволиться`\"",
-                    parse_mode="Markdown", 
+                    parse_mode="Markdown",
                     reply_markup=keyboard,
                     disable_web_page_preview=True
                 )
 
-            elif admin_role == "owner":
-
+            # Advanced admin functionality
+            elif admin_role == "advanced":
                 keyboard.add(
                     KeyboardButton(text="🌀 Выдать крутки"),
                     KeyboardButton(text="🔑 Выдать пасс"),
+                    KeyboardButton(text="✍️ Написать сообщение владельцу")
                 )
-
-                keyboard.add(
-                    KeyboardButton(text="👮 Администраторы"),
-                )
-
+                keyboard.add(KeyboardButton(text="👮 Администраторы"))
                 keyboard.add(
                     KeyboardButton(text="💬 Промокоды"),
                     KeyboardButton(text="🌀 Выдать себе крутки"),
                     KeyboardButton(text="🔑 Выдать себе пасс")
                 )
-
+                keyboard.add(KeyboardButton(text="😐 Пользователи"))
                 keyboard.add(
-                    KeyboardButton(text="😐 Пользователи"),
+                    KeyboardButton(text="⬅️ Назад"),
+                    KeyboardButton(text="🍃 Уволиться")
                 )
 
+                await message.answer(
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься продвинутым администратором.\n\n"
+                    f"✅ Тебе доступны продвинутые функции:\n\n"
+                    f"🔹 `Выдать себе крутки` - /self_spin <количество>\n"
+                    f"🔹 `Выдать себе пасс` - /self_pass <количество дней>\n"
+                    f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
+                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n"
+                    f"🔹 `Промокоды` - /promo\n"
+                    f"🔹 `Пользователи` - /users\n"
+                    f"🔹 `Администраторы (Просмотр администраторов и владельца бота)` - /admins\n\n"
+                    f"❌ Тебе не доступны следующие функции:\n\n"
+                    f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)`\n\n"
+                    f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: \"`Уволиться`\"",
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True
+                )
+
+            # Owner admin functionality
+            elif admin_role == "owner":
+                keyboard.add(
+                    KeyboardButton(text="🌀 Выдать крутки"),
+                    KeyboardButton(text="🔑 Выдать пасс")
+                )
+                keyboard.add(KeyboardButton(text="👮 Администраторы"))
+                keyboard.add(
+                    KeyboardButton(text="💬 Промокоды"),
+                    KeyboardButton(text="🌀 Выдать себе крутки"),
+                    KeyboardButton(text="🔑 Выдать себе пасс")
+                )
+                keyboard.add(KeyboardButton(text="😐 Пользователи"))
                 keyboard.add(
                     KeyboardButton(text="🔄 Обновиться"),
                     KeyboardButton(text="🔴 Выключить бота"),
                     KeyboardButton(text="🎆 Ивенты")
                 )
-
                 keyboard.add(
                     KeyboardButton(text="⬅️ Назад"),
                     KeyboardButton(text="💹 Статистика")
                 )
 
-
                 await message.answer(
-                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься владельцем бота.\n \n"
-                    f"✅ Тебе доступны все функции:\n \n"
+                    f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься владельцем бота.\n\n"
+                    f"✅ Тебе доступны все функции:\n\n"
                     f"🔹 `Выдать себе крутки` - /self_spin <количество>\n"
                     f"🔹 `Выдать себе пасс` - /self_pass <количество дней>\n"
                     f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
@@ -230,7 +212,7 @@ async def admin_commands(message: types.Message):
                     f"🔹 `Статистика` - /stats\n"
                     f"🔹 `Обновиться` - /update\n"
                     f"🔹 `Выключить бота` - /stop",
-                    parse_mode="Markdown", 
+                    parse_mode="Markdown",
                     reply_markup=keyboard,
                     disable_web_page_preview=True
                 )
