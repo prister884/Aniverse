@@ -958,7 +958,7 @@ async def craft_all(message: types.Message):
                 db.users.update_one(
                     {"user_id": user_id},
                     {"$set":{
-                        f"{craft}":craftable-(craft_amount*10),
+                        f"{craft}":craftable-((craftable//10)*10),
                         "spin_chances":user_data.get("spin_chances")+craft_amount
                     }}
                 )
