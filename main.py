@@ -343,7 +343,7 @@ async def admin_commands(message: types.Message):
         limit = admin_data.get("spins")
 
         if admin_role == "owner":
-            db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":spin_chances+spin_chances}})
+            db.users.update_one({"user_id":user_id},{"$set":{"spin_chances":us_spin_chances+spin_chances}})
 
             await message.answer("✅")
             await message.answer(
