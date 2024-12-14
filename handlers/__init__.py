@@ -19,26 +19,18 @@ from dp import dp
 def register_handlers(dp: Dispatcher):
     
     dp.register_message_handler(admin_commands, commands=["admin","unban", "remove_admin", "add_admin", "promote", "ban", "stop_admin", "users", "admins", "stats", "promo", "add_promo", "stop", "events", "add_event", "update", "give_spin", "give_pass", "self_spin"])
-    dp.register_message_handler(admin_message_handler, content_types=types.ContentTypes.TEXT)
-    
-    dp.register_callback_query_handler(back_to, lambda c: c.data.startswith("back_to_"))
-    
     dp.register_message_handler(start, content_types=types.ContentTypes.TEXT)
     dp.register_message_handler(leave_account, content_types=types.ContentTypes.TEXT)
-    dp.register_message_handler(change_nickname, content_types=types.ContentTypes.TEXT)
-    
-    dp.register_message_handler(craft_all, content_types=types.ContentTypes.TEXT)
-    dp.register_callback_query_handler(use_craft, lambda c: c.data.startswith("craft_"))
-    
-    dp.register_callback_query_handler(claim_spins, lambda c: c.data.startswith("claim_spins"))
-    
-    dp.register_message_handler(handle_menu, content_types=types.ContentTypes.TEXT)
-    
-    dp.register_callback_query_handler(payment_page_aniverse, lambda c: c.data.startswith("payment_page_"))
-    dp.register_callback_query_handler(alternative_payment, lambda c: c.data.startswith("alternative_payment_"))
-    
-    dp.register_callback_query_handler(process_callback, lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
-    
+    dp.register_callback_query_handler(back_to, lambda c: c.data.startswith("back_to_"))
     dp.register_callback_query_handler(choose_universe, lambda c: c.data == "choose_universe")
     dp.register_callback_query_handler(paginate_universes, lambda c: c.data.startswith("page_"))
     dp.register_callback_query_handler(select_universe, lambda c: c.data.startswith("universe_"))
+    dp.register_message_handler(change_nickname, content_types=types.ContentTypes.TEXT)
+    dp.register_message_handler(craft_all, content_types=types.ContentTypes.TEXT)
+    dp.register_message_handler(handle_menu, content_types=types.ContentTypes.TEXT)
+    dp.register_callback_query_handler(process_callback, lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
+    dp.register_callback_query_handler(use_craft, lambda c: c.data.startswith("craft_"))
+    dp.register_callback_query_handler(claim_spins, lambda c: c.data.startswith("claim_spins"))
+    dp.register_callback_query_handler(payment_page_aniverse, lambda c: c.data.startswith("payment_page_"))
+    dp.register_callback_query_handler(alternative_payment, lambda c: c.data.startswith("alternative_payment_"))
+    dp.register_message_handler(admin_message_handler, content_types=types.ContentTypes.TEXT)
