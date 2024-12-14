@@ -302,6 +302,7 @@ async def admin_commands(message: types.Message):
         target_username = target_user.get("username")
 
         if admin_role == "owner":
+            
             target_user = db.users.find_one({"user_id": target_user_id})
             target_nickname = target_user.get("nickname","Гость")
             target_username = target_user.get("username")
@@ -344,13 +345,16 @@ async def admin_commands(message: types.Message):
         target_nickname = target_user.get("nickname","Гость")
         target_username = target_user.get("username")
         new_role = parts[2]
+        target_role = new_role
 
         if new_role not in ["limited", "advanced"]:
             await message.answer("❌ Роль должна быть `limited` или `advanced`.")
             return
 
         if admin_role in ["owner", "advanced"]:
+
             target_user = db.users.find_one({"user_id": target_user_id})
+
             if not target_user:
                 await message.answer("❌ Пользователь не найден.")
                 return
@@ -364,7 +368,9 @@ async def admin_commands(message: types.Message):
                 self_spins = 500
 
             db.admins.update_one({"user_id": target_user_id}, {"$set": {"role": new_role, "spins": limit, "self_spins":self_spins}})
+            
             await message.answer(f"✅ Роль пользователя [{target_nickname}](https://t.me/{target_username}) изменена на \"{new_role}\".", parse_mode="Markdown",disable_web_page_preview=True)
+            
             await bot.send_message(
                 chat_id=target_user_id, 
                 text=f"✅ [{target_nickname}](https://t.me/{target_username}), тебя повысили до {target_role}. (Твой уровень: {target_role})",
