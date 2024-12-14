@@ -1,7 +1,7 @@
 from rate_limit import rate_limit
 from aiogram import types
 from db import db
-from menu import handle_menu
+from handlers.menu import handle_menu
 
 @rate_limit(0.5)
 async def craft_all(message: types.Message):

@@ -4,11 +4,11 @@ from db import db
 from keyboards.main_keyboard import get_main_keyboard
 from keyboards.welcome_button import get_welcome_buttons
 from dp import dp
-from craft import craft_all
+from handlers.craft import craft_all
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
-import datetime
+from datetime import datetime
 
 
 

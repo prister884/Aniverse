@@ -4,7 +4,7 @@ from db import db
 import time
 import random
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-from admin import admin_message_handler
+from handlers.admin import admin_message_handler
 
 @rate_limit(0.5)
 async def handle_menu(message: types.Message):
