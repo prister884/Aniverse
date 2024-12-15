@@ -141,6 +141,7 @@ async def change_nickname(message: types.Message):
 
     # Check if the message starts with "Сменить ник"
     if message.text.lower().startswith("сменить ник"):
+        
         # Extract the new nickname
         parts = message.text.split(maxsplit=2)
         if len(parts) < 3 or not parts[2].strip():
