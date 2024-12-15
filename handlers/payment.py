@@ -62,7 +62,7 @@ async def alternative_payment(callback_query: types.CallbackQuery):
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_paymentaniverse")
         )
 
-    elif purchase_type == "unban": 
+    elif purchase_type == "разбан_пользователя": 
 
         keyboard.add(
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_welcome")
