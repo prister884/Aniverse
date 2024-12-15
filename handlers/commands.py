@@ -96,7 +96,7 @@ async def start(message: types.Message):
 
             unban_request = InlineKeyboardMarkup(row_width=1).add(
                 InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don"),
-                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="alternative_payment_разбан_пользователя")
+                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="payment_page_разбан_пользователя")
             )
 
             # Greet the new user

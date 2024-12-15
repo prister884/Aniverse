@@ -4,7 +4,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from db import db
 
 @rate_limit(5) 
-async def payment_page_aniverse(callback_query: types.CallbackQuery):
+async def payment_page(callback_query: types.CallbackQuery):
     """
     Handle the payment page for the user.
     The type of purchase and its price will be dynamically fetched from the database based on callback data.
@@ -14,25 +14,47 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
         
     keys = InlineKeyboardMarkup(row_width=2)
 
-    keys.add(
-            InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_aniverse_pass"),
+    purchase_type = callback_query.data.split("_",2)[2]
+
+    capital_name = (purchase_type.capitalize().split("_"))[0]+" "+(purchase_type.capitalize().split("_"))[1]
+
+    if purchase_type == "aniverse_pass":
+
+        keys.add(
+            InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_aniverse_pass"),
             InlineKeyboardButton(text="✅ Я оплатил", url="t.me/aniverseclone_don")
-    )
+        )
+            
+        keys.add(
+                InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_pass")  
+        )
+            
+        keys.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_aniverse")
+        )
+
+    elif purchase_type == "разбан_пользователя":
         
-    keys.add(
-            InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_pass")  
-    )
-        
-    keys.add(
-        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_aniverse")
-    )
-    
+        keys.add(
+            InlineKeyboardButton(text="🛒 Оплатить", callback_data="alternative_payment_разбан_пользователя"),
+            InlineKeyboardButton(text="✅ Я оплатил", url="t.me/aniverseclone_don")
+        )
+            
+        keys.add(
+                InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_разбан_пользователя")  
+        )
+            
+        keys.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_welcome")
+        )   
+
+
     await callback_query.message.edit_text(
-        f"🧾 Покупка Aniverse pass\n"
+        f"🧾 Покупка: {capital_name}\n"
         f"💵 Стоимость: 159 рублей \n"
         f"➖➖➖➖➖➖\n"
         f"‼️ `После оплаты нажми кнопку \"я оплатил\"`.\n\n"
-        f"💬 `Возникли сложности с донатом? Пиши сюда - ` @donshirley \n"
+        f"💬 `Возникли сложности с донатом? Пиши сюда - ` @aniverseclone_don \n"
         f"➖➖➖➖➖➖\n"
         f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)",
         parse_mode="Markdown",
@@ -49,11 +71,11 @@ async def alternative_payment(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     
     purchase_type = callback_query.data.split("_", maxsplit=2)[2] 
-    
+
     # Create the keyboard with the payment link button
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
-        InlineKeyboardButton(text="📥 Отправить чек", url="t.me/donshirley")
+        InlineKeyboardButton(text="📥 Отправить чек", url="t.me/aniverseclone_don")
     )
 
     if purchase_type == "aniverse_pass":
