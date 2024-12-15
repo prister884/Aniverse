@@ -9,7 +9,6 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from datetime import datetime
-from handlers.payment import alternative_payment
 
 
 @rate_limit(1)
@@ -97,7 +96,7 @@ async def start(message: types.Message):
 
             unban_request = InlineKeyboardMarkup(row_width=1).add(
                 InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don"),
-                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="alternative_payment")
+                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="alternative_payment_unban")
             )
 
             # Greet the new user
