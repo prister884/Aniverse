@@ -260,6 +260,7 @@ async def admin_commands(message: types.Message):
 
         if admin_role in ["advanced", "owner"]:
 
+
             if banned_user:
                 await message.answer(
                     f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
@@ -272,6 +273,13 @@ async def admin_commands(message: types.Message):
             target_username = target_user.get("username")
             db.banned.insert_one(target_user)
             db.users.find_one_and_delete({"user_id": target_user_id})
+
+            if not target_user:
+                await message.answer(
+                    f"🚫 Не удалось найти пользователя с ID: {target_user_id}",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
 
             await message.answer("✅")
             await message.answer(
