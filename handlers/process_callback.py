@@ -14,7 +14,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         # Create the keyboard with the payment link button
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(
-            InlineKeyboardButton(text="🔑 Купить Aniverse pass", callback_data = "payment_page_aniverse_aniverse_pass")
+            InlineKeyboardButton(text="🔑 Купить Aniverse pass", callback_data = "payment_page_aniverse_pass")
         )
         keyboard.add(
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_menu")
