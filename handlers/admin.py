@@ -253,6 +253,7 @@ async def admin_commands(message: types.Message):
             return
         
         message.text.strip().lower().split(" ", maxsplit=2)
+        
         target_user_id = int(parts[1])
         target_role = db.admins.find_one({"user_id":target_user_id})
         reason = parts[2]
