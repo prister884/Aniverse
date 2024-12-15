@@ -258,11 +258,11 @@ async def admin_commands(message: types.Message):
         target_role = db.admins.find_one({"user_id":target_user_id})
         reason = parts[2]
         banned_user = db.banned.find_one({"user_id":target_user_id})
+        admin_check = db.admins.find_one({"user_id":target_user_id}).get("role")
 
-        if admin_role in ["advanced", "owner"]:
+        if admin_role=="owner":
 
             target_user = db.users.find_one({"user_id": target_user_id})
-
 
             if banned_user:
                 await message.answer(
@@ -301,6 +301,57 @@ async def admin_commands(message: types.Message):
                     parse_mode="Markdown",
                     disable_web_page_preview=True
                 )
+
+        elif admin_role=="advanced" and admin_check not in ["owner", "advanced"]:
+            
+            target_user = db.users.find_one({"user_id": target_user_id})
+
+            if banned_user:
+                await message.answer(
+                    f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+            
+            elif not target_user:
+                await message.answer(
+                    f"🚫 Не удалось найти пользователя с ID: {target_user_id}",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+
+            else: 
+                
+                target_nickname = target_user.get("nickname","Гость")
+                target_username = target_user.get("username")
+    
+                db.banned.insert_one(target_user)
+                db.users.find_one_and_delete({"user_id": target_user_id})
+
+
+                await message.answer("✅")
+                await message.answer(
+                    f"Пользователь [{target_nickname}](https://t.me/{target_username}), был успешно заблокирован.\n"
+                    f"Причина блокировки: {reason}",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+
+                await bot.send_message(
+                    chat_id=target_user_id,
+                    text=f"[{target_nickname}](https://t.me/{target_username}), вы были заброкированы администраторами бота. \nПричина блокировки: {reason}",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+        
+        else:
+            await message.answer(
+                    f"🚫 [{nickname}](https://t.me/{username})",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+            )
+
+
 
 
     elif message.text.startswith("/update"):
