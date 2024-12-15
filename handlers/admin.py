@@ -253,7 +253,7 @@ async def admin_commands(message: types.Message):
             return
         
         message.text.strip().lower().split(" ", maxsplit=2)
-        
+
         target_user_id = int(parts[1])
         target_role = db.admins.find_one({"user_id":target_user_id})
         reason = parts[2]
@@ -289,7 +289,7 @@ async def admin_commands(message: types.Message):
 
                 await message.answer("✅")
                 await message.answer(
-                    f"Пользователь [{target_nickname}](https://t.me/{target_username}), был успешно заблокирован."
+                    f"Пользователь [{target_nickname}](https://t.me/{target_username}), был успешно заблокирован.\n"
                     f"Причина блокировки: {reason}",
                     parse_mode="Markdown",
                     disable_web_page_preview=True
