@@ -274,8 +274,8 @@ async def admin_commands(message: types.Message):
             )
 
             await bot.send_message(
-                f"[{target_nickname}](https://t.me/{target_username}), вы были заброкированы администраторами бота."
-                f"Причина блокировки: {reason}",
+                chat_id=target_user_id,
+                text=f"[{target_nickname}](https://t.me/{target_username}), вы были заброкированы администраторами бота. \n Причина блокировки: {reason}",
                 parse_mode="Markdown",
                 disable_web_page_preview=True
             )
