@@ -252,12 +252,31 @@ async def admin_commands(message: types.Message):
             await message.answer("❌ Укажите команду в формате: /ban <user_id> <причина блокировки>")
             return
         
+        message.text.strip().lower().split(" ", maxsplit=3)
         target_user_id = int(parts[1])
         target_user = db.users.find_one({"user_id": target_user_id})
         target_role = db.admins.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
         target_username = target_user.get("username")
         reason = parts[2]
+        banned_user = db.banned.find_one({"user_id":target_user_id})
+
+
+        if not target_user:
+
+            if not banned_user:
+                await message.answer(
+                    f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+
+            else: 
+                await message.answer(
+                    f"🚫 Не удалось найти пользователя с ID: {target_user_id}",
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
 
         if admin_role in ["advanced", "owner"]:
 
