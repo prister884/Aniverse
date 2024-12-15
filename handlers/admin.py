@@ -269,8 +269,6 @@ async def admin_commands(message: types.Message):
                 )
 
             target_user = db.users.find_one({"user_id": target_user_id})
-            target_nickname = target_user.get("nickname","Гость")
-            target_username = target_user.get("username")
             db.banned.insert_one(target_user)
             db.users.find_one_and_delete({"user_id": target_user_id})
 
@@ -280,6 +278,9 @@ async def admin_commands(message: types.Message):
                     parse_mode="Markdown",
                     disable_web_page_preview=True
                 )
+
+            target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
 
             await message.answer("✅")
             await message.answer(
