@@ -8,7 +8,7 @@ from handlers.commands import start, leave_account, change_nickname
 from handlers.craft import craft_all, use_craft
 from handlers.rewards import claim_spins
 from handlers.menu import handle_menu
-from handlers.payment import payment_page_aniverse, alternative_payment
+from handlers.payment import payment_page, alternative_payment
 from handlers.process_callback import process_callback
 from handlers.universe import choose_universe, paginate_universes, select_universe
 
@@ -31,6 +31,6 @@ def register_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(process_callback, lambda c: c.data in ["pass", "rating", "shop", "craft", "arena", "clans", "tasks", "referral", "change_universe", "spin_bonuses"])
     dp.register_callback_query_handler(use_craft, lambda c: c.data.startswith("craft_"))
     dp.register_callback_query_handler(claim_spins, lambda c: c.data.startswith("claim_spins"))
-    dp.register_callback_query_handler(payment_page_aniverse, lambda c: c.data.startswith("payment_page_"))
+    dp.register_callback_query_handler(payment_page, lambda c: c.data.startswith("payment_page_"))
     dp.register_callback_query_handler(alternative_payment, lambda c: c.data.startswith("alternative_payment_"))
     dp.register_message_handler(admin_message_handler, content_types=types.ContentTypes.TEXT)
