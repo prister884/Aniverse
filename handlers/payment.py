@@ -16,8 +16,6 @@ async def payment_page(callback_query: types.CallbackQuery):
 
     purchase_type = callback_query.data.split("_",2)[2]
 
-    capital_name = (purchase_type.capitalize().split("_"))[0]+" "+(purchase_type.capitalize().split("_"))[1]
-
     if purchase_type == "aniverse_pass":
 
         keys.add(
@@ -48,13 +46,20 @@ async def payment_page(callback_query: types.CallbackQuery):
             InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_welcome")
         )   
 
+    # Fetch the price of the selected purchase from the database
+    pricing_data = db.pricing.find_one({"type": purchase_type})  # Assuming pricing data is stored in the "pricing" collection
+
+    capital_name = (purchase_type.capitalize().split("_"))[0]+" "+(purchase_type.capitalize().split("_"))[1]
+
+    # Get the price from the pricing data
+    price = pricing_data.get("price", 0)
 
     await callback_query.message.edit_text(
         f"🧾 Покупка: {capital_name}\n"
-        f"💵 Стоимость: 159 рублей \n"
+        f"💵 Стоимость: {price} рублей \n"
         f"➖➖➖➖➖➖\n"
-        f"‼️ `После оплаты нажми кнопку \"я оплатил\"`.\n\n"
-        f"💬 `Возникли сложности с донатом? Пиши сюда - ` @aniverseclone_don \n"
+        f"‼️ После оплаты нажми кнопку \"я оплатил\".\n\n"
+        f"💬 Возникли сложности с донатом? Пиши сюда -  @aniverseclone_don \n"
         f"➖➖➖➖➖➖\n"
         f"[Пользовательское соглашение](https://telegra.ph/Polzovatelskoe-soglashenie-06-01-5)",
         parse_mode="Markdown",
