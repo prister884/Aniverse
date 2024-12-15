@@ -269,8 +269,6 @@ async def admin_commands(message: types.Message):
                 )
 
             target_user = db.users.find_one({"user_id": target_user_id})
-            db.banned.insert_one(target_user)
-            db.users.find_one_and_delete({"user_id": target_user_id})
 
             if not target_user:
                 await message.answer(
@@ -280,9 +278,13 @@ async def admin_commands(message: types.Message):
                 )
 
             else: 
-                
+
                 target_nickname = target_user.get("nickname","Гость")
                 target_username = target_user.get("username")
+    
+                db.banned.insert_one(target_user)
+                db.users.find_one_and_delete({"user_id": target_user_id})
+
 
                 await message.answer("✅")
                 await message.answer(
