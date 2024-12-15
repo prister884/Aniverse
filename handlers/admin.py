@@ -254,7 +254,6 @@ async def admin_commands(message: types.Message):
         
         message.text.strip().lower().split(" ", maxsplit=3)
         target_user_id = int(parts[1])
-        target_user = db.users.find_one({"user_id": target_user_id})
         target_role = db.admins.find_one({"user_id":target_user_id})
         target_nickname = target_user.get("nickname","Гость")
         target_username = target_user.get("username")
@@ -279,6 +278,7 @@ async def admin_commands(message: types.Message):
                         disable_web_page_preview=True
                     )
 
+            target_user = db.users.find_one({"user_id": target_user_id})
             db.banned.insert_one(target_user)
             db.banned.update_one({"user_id":target_user_id},{"$set":{"ban_reason":reason}})
             db.users.find_one_and_delete({"user_id": target_user_id})
