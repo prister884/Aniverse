@@ -255,13 +255,10 @@ async def admin_commands(message: types.Message):
         message.text.strip().lower().split(" ", maxsplit=3)
         target_user_id = int(parts[1])
         target_role = db.admins.find_one({"user_id":target_user_id})
-        target_nickname = target_user.get("nickname","Гость")
-        target_username = target_user.get("username")
         reason = parts[2]
         banned_user = db.banned.find_one({"user_id":target_user_id})
 
         if admin_role in ["advanced", "owner"]:
-
 
             if banned_user:
                 await message.answer(
@@ -271,6 +268,8 @@ async def admin_commands(message: types.Message):
                 )
 
             target_user = db.users.find_one({"user_id": target_user_id})
+            target_nickname = target_user.get("nickname","Гость")
+            target_username = target_user.get("username")
             db.banned.insert_one(target_user)
             db.banned.update_one({"user_id":target_user_id},{"$set":{"ban_reason":reason}})
             db.users.find_one_and_delete({"user_id": target_user_id})
