@@ -261,24 +261,23 @@ async def admin_commands(message: types.Message):
         reason = parts[2]
         banned_user = db.banned.find_one({"user_id":target_user_id})
 
-
-        if not target_user:
-
-            if not banned_user:
-                await message.answer(
-                    f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
-                    parse_mode="Markdown",
-                    disable_web_page_preview=True
-                )
-
-            else: 
-                await message.answer(
-                    f"🚫 Не удалось найти пользователя с ID: {target_user_id}",
-                    parse_mode="Markdown",
-                    disable_web_page_preview=True
-                )
-
         if admin_role in ["advanced", "owner"]:
+
+            if not target_user:
+                
+                if not banned_user:
+                    await message.answer(
+                        f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
+
+                else: 
+                    await message.answer(
+                        f"🚫 Не удалось найти пользователя с ID: {target_user_id}",
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
 
             db.banned.insert_one(target_user)
             db.banned.update_one({"user_id":target_user_id},{"$set":{"ban_reason":reason}})
