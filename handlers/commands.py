@@ -96,7 +96,7 @@ async def start(message: types.Message):
         else:
 
             unban_request = InlineKeyboardMarkup(row_width=1).add(
-                InlineKeyboardButton(text="Подать заявку администратору", url="https://t.me/donshirley")
+                InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don")
             )
 
             # Greet the new user
