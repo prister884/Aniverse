@@ -9,6 +9,11 @@ import os
 import sys
 from keyboards.main_keyboard import get_main_keyboard
 
+# commands=["admin","add_admin", "remove_admin", "ban", "unban",  "promote", "admins", 
+# "users", "stats", "promo", "add_promo", "stop", "update", "events", "add_event",
+# "give_spin", "give_pass", "self_spin", "self_pass"]
+
+
 @rate_limit(0.5)
 async def admin_commands(message: types.Message):
 
@@ -16,14 +21,17 @@ async def admin_commands(message: types.Message):
     user_data = db.users.find_one({"user_id": user_id})
     admin_data = db.admins.find_one({"user_id": user_id})
 
+    if not admin_data:
+        await message.answer(
+            f"🚫 [{nickname}](https://t.me/{username}), вы не являетесь администратором бота.",
+            parse_mode="Markdown",
+            disable_web_page_preview=True
+        )
+    
     if not user_data:
         await message.answer("❌ Пользователь не найден, пожалуйста, сначала введите команду /start.")
         return
     
-    if not admin_data:
-        await message.answer("❌ Вы не администратор или у вас недостаточно прав, чтобы выполнить эту команду.")
-        return
-
     admin_data = db.admins.find_one({"user_id": user_id})
     admin_role = admin_data.get("role", "limited")
     parts = message.text.strip().lower().split(" ")
@@ -40,6 +48,7 @@ async def admin_commands(message: types.Message):
                 parse_mode="Markdown",
                 disable_web_page_preview=True
             )
+
         else:
             admin_role = admin_data.get("role")  # Get role after confirming admin_data exists
             keyboard = ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
@@ -59,13 +68,15 @@ async def admin_commands(message: types.Message):
                 await message.answer(
                     f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься лимитированный администратором.\n\n"
                     f"✅ Тебе доступны следующие функции:\n\n"
-                    f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
-                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n\n"
+                    f"🔹 Выдать крутки - /give_spin <user_id> <количество>\n"
+                    f"🔹 Выдать пасс - /give_pass <user_id> <количество дней>\n\n"
                     f"❌ Тебе не доступны следующие функции:\n\n"
-                    f"🔹 `Выдать себе крутки`\n"
-                    f"🔹 `Выдать себе пасс`\n"
-                    f"🔹 `Промокоды`\n"
-                    f"🔹 `Пользователи`\n\n"
+                    f"🔹 Выдать себе крутки\n"
+                    f"🔹 Выдать себе пасс\n"
+                    f"🔹 Промокоды\n"
+                    f"🔹 Пользователи\n"
+                    f"🔹 Администраторы - /admins\n"
+                    f"🔹 Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)\n\n"
                     f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: \"`Уволиться`\"",
                     parse_mode="Markdown",
                     reply_markup=keyboard,
@@ -94,15 +105,15 @@ async def admin_commands(message: types.Message):
                 await message.answer(
                     f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься продвинутым администратором.\n\n"
                     f"✅ Тебе доступны продвинутые функции:\n\n"
-                    f"🔹 `Выдать себе крутки` - /self_spin <количество>\n"
-                    f"🔹 `Выдать себе пасс` - /self_pass <количество дней>\n"
-                    f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
-                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n"
-                    f"🔹 `Промокоды` - /promo\n"
-                    f"🔹 `Пользователи` - /users\n"
-                    f"🔹 `Администраторы (Просмотр администраторов и владельца бота)` - /admins\n\n"
+                    f"🔹 Выдать себе крутки - /self_spin <количество>\n"
+                    f"🔹 Выдать себе пасс - /self_pass <количество дней>\n"
+                    f"🔹 Выдать крутки - /give_spin <user_id> <количество>\n"
+                    f"🔹 Выдать пасс - /give_pass <user_id> <количество дней>\n"
+                    f"🔹 Промокоды - /promo\n"
+                    f"🔹 Пользователи - /users\n"
+                    f"🔹 Администраторы - /admins\n\n"
                     f"❌ Тебе не доступны следующие функции:\n\n"
-                    f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)`\n\n"
+                    f"🔹 Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)\n\n"
                     f"🗒 Ты можешь уволиться в любое время нажав на кнопку, или написав в чат: \"`Уволиться`\"",
                     parse_mode="Markdown",
                     reply_markup=keyboard,
@@ -136,37 +147,21 @@ async def admin_commands(message: types.Message):
                 await message.answer(
                     f"👋 Привет, [{nickname}](https://t.me/{username}), ты являешься владельцем бота.\n\n"
                     f"✅ Тебе доступны все функции:\n\n"
-                    f"🔹 `Выдать себе крутки` - /self_spin <количество>\n"
-                    f"🔹 `Выдать себе пасс` - /self_pass <количество дней>\n"
-                    f"🔹 `Выдать крутки` - /give_spin <user_id> <количество>\n"
-                    f"🔹 `Выдать пасс` - /give_pass <user_id> <количество дней>\n"
-                    f"🔹 `Промокоды` - /promo\n"
-                    f"🔹 `Пользователи` - /users\n"
-                    f"🔹 `Администраторы (Просмотр администраторов и владельца бота)` - /admins\n"
-                    f"🔹 `Ивенты (мифический день, босс, новый сезон, летние и зимние ивенты)` - /events\n"
-                    f"🔹 `Статистика` - /stats\n"
-                    f"🔹 `Обновиться` - /update\n"
-                    f"🔹 `Выключить бота` - /stop",
+                    f"🔹 Выдать себе крутки - /self_spin <количество>\n"
+                    f"🔹 Выдать себе пасс - /self_pass <количество дней>\n"
+                    f"🔹 Выдать крутки - /give_spin <user_id> <количество>\n"
+                    f"🔹 Выдать пасс - /give_pass <user_id> <количество дней>\n"
+                    f"🔹 Промокоды - /promo\n"
+                    f"🔹 Пользователи - /users\n"
+                    f"🔹 Администраторы - /admins\n"
+                    f"🔹 Ивенты - /events\n"
+                    f"🔹 Статистика - /stats\n"
+                    f"🔹 Обновить бота - /update\n"
+                    f"🔹 Выключить бота - /stop",
                     parse_mode="Markdown",
                     reply_markup=keyboard,
                     disable_web_page_preview=True
                 )
-
-    if message.text.startswith("/update"):
-        if admin_role in ["owner", "advanced"]:
-            await message.answer("🔄 Обновление бота... Пожалуйста, подождите.")
-            try:
-                result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
-                git_output = result.stdout.strip() or "No output from Git."
-                await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
-
-                if git_output != "Already up to date.":
-                    await message.answer("♻️ Перезапускаю бота...")
-                    os.execl(sys.executable, sys.executable, *sys.argv)
-            except Exception as e:
-                await message.answer(f"❌ Не удалось обновить бота:\n{e}")
-        else:
-            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
     elif message.text.startswith("/add_admin"):
 
@@ -251,7 +246,59 @@ async def admin_commands(message: types.Message):
 
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
 
+    elif message.text.startswith("/ban"):
+
+        if len(parts) < 3:
+            await message.answer("❌ Укажите команду в формате: /ban <user_id> <причина блокировки>")
+            return
+        
+        target_user_id = int(parts[1])
+        target_user = db.users.find_one({"user_id": target_user_id})
+        target_role = db.admins.find_one({"user_id":target_user_id})
+        target_nickname = target_user.get("nickname","Гость")
+        target_username = target_user.get("username")
+        reason = parts[2]
+
+        if admin_role in ["advanced", "owner"]:
+
+            db.banned.insert_one(target_user)
+            db.banned.update_one({"user_id":target_user_id},{"$set":{"ban_reason":reason}})
+            db.users.find_one_and_delete({"user_id": target_user_id})
+
+            await message.answer("✅")
+            await message.answer(
+                f"Пользователь [{target_nickname}](https://t.me/{target_username}), был успешно заблокирован."
+                f"Причина блокировки: {reason}",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+            await bot.send_message(
+                f"[{target_nickname}](https://t.me/{target_username}), вы были заброкированы администраторами бота."
+                f"Причина блокировки: {reason}",
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+
+    elif message.text.startswith("/update"):
+        if admin_role in ["owner", "advanced"]:
+            await message.answer("🔄 Обновление бота... Пожалуйста, подождите.")
+            try:
+                result = subprocess.run(["git", "pull"], capture_output=True, text=True, check=True)
+                git_output = result.stdout.strip() or "No output from Git."
+                await message.answer(f"✅ Обновления синхронизированы:\n`\n{git_output}\n`", parse_mode="Markdown")
+
+                if git_output != "Already up to date.":
+                    await message.answer("♻️ Перезапускаю бота...")
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+            except Exception as e:
+                await message.answer(f"❌ Не удалось обновить бота:\n{e}")
+        else:
+            await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
+
     elif message.text.startswith("/promote"):
+        
         if len(parts) < 3:
             await message.answer("❌ Укажите команду в формате: /promote <user_id> <role>")
             return
@@ -298,6 +345,10 @@ async def admin_commands(message: types.Message):
             await message.answer("🚫 Недостаточно прав для выполнения этой команды.")
     
     elif message.text.startswith("/give_spin"):
+
+        if len(parts) < 3:
+            await message.answer("❌ Укажите команду в формате: /give_spin <user_id> <количество>")
+            return
 
         target_user_id = int(parts[1])
         target_user = db.users.find_one({"user_id":target_user_id})
@@ -395,6 +446,10 @@ async def admin_commands(message: types.Message):
             )
 
     elif message.text.startswith("/self_spin"):
+        
+        if len(parts) < 2:
+            await message.answer("❌ Укажите команду в формате: /self_spin <количество>")
+            return
         
         user_id = message.from_user.id
         user_data = db.users.find_one({"user_id":user_id})

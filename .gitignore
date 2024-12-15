@@ -3,3 +3,4 @@ venv/*
 ANIVERSE_CLONE.pdf
 __pycache__/*
 # universe_initialization/*
+screenshots/*
