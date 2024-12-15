@@ -96,7 +96,8 @@ async def start(message: types.Message):
         else:
 
             unban_request = InlineKeyboardMarkup(row_width=1).add(
-                InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don")
+                InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don"),
+                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="alternative_payment")
             )
 
             # Greet the new user
@@ -141,7 +142,7 @@ async def change_nickname(message: types.Message):
 
     # Check if the message starts with "Сменить ник"
     if message.text.lower().startswith("сменить ник"):
-        
+
         # Extract the new nickname
         parts = message.text.split(maxsplit=2)
         if len(parts) < 3 or not parts[2].strip():

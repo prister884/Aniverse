@@ -51,18 +51,40 @@ async def back_to(callback_query: types.CallbackQuery):
         # Handle back to welcome screen
         user_id = callback_query.from_user.id
         user_data = db.users.find_one({"user_id": user_id})
+        banned_user = db.banned.find_one({"user_id":user_id})
+
         if not user_data:
             await callback_query.answer("❌ Пожалуйста, сначала введите команду /start.")
             return
 
-        await callback_query.message.edit_text(
-            f"👋 [{nickname}](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
-            f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе \n\n"
-            f"🌏 Вселенные будут постоянно обновляться и улучшаться",
-            parse_mode="Markdown",
-            reply_markup=get_main_keyboard(user_id),
-            disable_web_page_preview=True  # Display main menu keyboard
-        )
+        if not banned_user:
+
+            await callback_query.message.edit_text(
+                f"👋 [{nickname}](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
+                f"🃏 Цель игры в коллекционировании карточек. Собирай карточки и борись за место в топе \n\n"
+                f"🌏 Вселенные будут постоянно обновляться и улучшаться",
+                parse_mode="Markdown",
+                reply_markup=get_main_keyboard(user_id),
+                disable_web_page_preview=True  # Display main menu keyboard
+            )
+        
+        else: 
+
+            unban_request = InlineKeyboardMarkup(row_width=1).add(
+                InlineKeyboardButton(text="Подать заявку на разбан", url="https://t.me/aniverseclone_don"),
+                InlineKeyboardButton(text="Разбан без проверки за 555 руб.", callback_data="alternative_payment")
+            )
+
+            # Greet the new user
+            await callback_query.message.answer(
+                f"👋 [Гость](tg://user?id={user_id}), добро пожаловать во вселенную Aniverse card.\n\n"
+                f"🃏 К сожалению вы были забанены администраторами бота!\n",
+                reply_markup=unban_request,
+                parse_mode="Markdown",
+                disable_web_page_preview=True  # Disable link preview for greeting message
+            )
+
+
 
     elif back_type == "aniverse":
         # Handle back to Aniverse screen (you can add logic specific to this screen)

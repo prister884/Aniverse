@@ -20,7 +20,7 @@ async def payment_page_aniverse(callback_query: types.CallbackQuery):
     )
         
     keys.add(
-            InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_aniverse_pass")  
+            InlineKeyboardButton(text="✏️ Другие Способы", callback_data="alternative_payment_aniverse_pass")  
     )
         
     keys.add(
@@ -48,16 +48,25 @@ async def alternative_payment(callback_query: types.CallbackQuery):
     
     user_id = callback_query.from_user.id
     
-    purchase_type = callback_query.data.split("_", 3)[3] 
+    purchase_type = callback_query.data.split("_", maxsplit=2)[3] 
     
     # Create the keyboard with the payment link button
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton(text="📥 Отправить чек", url="t.me/donshirley")
     )
-    keyboard.add(
-        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_paymentaniverse")
-    )
+
+    if purchase_type == "aniverse_pass":
+        
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_paymentaniverse")
+        )
+
+    elif purchase_type == "unban": 
+
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_welcome")
+        )
 
 
     # Fetch the price of the selected purchase from the database
