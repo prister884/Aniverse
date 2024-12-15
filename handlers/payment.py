@@ -48,7 +48,7 @@ async def alternative_payment(callback_query: types.CallbackQuery):
     
     user_id = callback_query.from_user.id
     
-    purchase_type = callback_query.data.split("_", maxsplit=2)[3] 
+    purchase_type = callback_query.data.split("_", maxsplit=2)[2] 
     
     # Create the keyboard with the payment link button
     keyboard = InlineKeyboardMarkup(row_width=1)
