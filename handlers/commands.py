@@ -9,7 +9,7 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from datetime import datetime
-from payment import alternative_payment
+from handlers.payment import alternative_payment
 
 
 @rate_limit(1)
