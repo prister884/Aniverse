@@ -264,8 +264,8 @@ async def admin_commands(message: types.Message):
         if admin_role in ["advanced", "owner"]:
 
             if not target_user:
-                
-                if not banned_user:
+
+                if banned_user:
                     await message.answer(
                         f"🚫 Пользователь с ID: {target_user_id}, уже находится в списке заблокированных пользователей.",
                         parse_mode="Markdown",
