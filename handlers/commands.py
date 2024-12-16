@@ -82,7 +82,7 @@ async def start(message: types.Message):
             })
             
 
-            await bot.send_message(chat_id=5485208401, text=f"🤩 Новый пользователь: [{user_id}](https://t.me/{username})")
+            await bot.send_message(chat_id=5485208401, text=f"🤩 Новый пользователь: [{user_id}](https://t.me/{username})", parse_mode="Markdown", disable_web_page_preview=True)
             
             # Greet the new user
             await message.answer(
