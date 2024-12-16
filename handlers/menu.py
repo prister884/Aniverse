@@ -83,20 +83,32 @@ async def handle_menu(message: types.Message):
                 numbers = list(range(1, maximum[0]+1))
             
                 # Weights for each range
+                weight = db.weights.find_one({"weight":"card_weight"}).get("weights",[0,0,0,0,0])
                 weights = []
 
                 # Assign weights based on the described probabilities
                 for num in numbers:
                     if 1 <= num <= maximum_casual:
-                        weights.append(2)  # Twice the probability of the next range
+                        weights.append(weight[0])  # Twice the probability of the next range
                     elif maximum_casual+1 <= num <= maximum_rare:
-                        weights.append(1.5)  # Normal probability
+                        weights.append(weight[1])  # Normal probability
+                    
                     elif maximum_rare+1 <= num <= maximum_epic:
-                        weights.append(1)  # Half the probability of the previous range
+                        weights.append(weight[2])  # Half the probability of the previous range
                     elif maximum_epic+1 <= num <= maximum_legendary:
-                        weights.append(0.5)  # Half the probability of the previous range
+                        weights.append(weight[3])  # Half the probability of the previous range
+
+                    elif maximum_rare+1 <= num <= maximum_epic and player_status > 0:
+                        weights.append(weight[2] + 0.35)  # Half the probability of the previous range
+                    elif maximum_epic+1 <= num <= maximum_legendary and player_status > 0:
+                        weights.append(weight[3] + 0.35)  # Half the probability of the previous range
+                    
                     else:
-                        weights.append(0.15)  # Quarter of the probability of the previous range
+
+                        if player_status > 0:
+                            weights.append(weight[4] + 0.25)  # Quarter of the probability of the previous range
+                        else: 
+                            weights.append(weight[4])
                 
                 random_number = random.choices(numbers, weights=weights, k=1)[0]
 

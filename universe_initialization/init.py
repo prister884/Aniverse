@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from tokyog import tokyog
+from bleach import bleach
 
 # MongoDB connection
 client = MongoClient("mongodb+srv://abdurazzoqov057:yqW7tgxtYjcROPkM@cluster0.ttusl.mongodb.net/?retryWrites=true&w=majority")
@@ -48,7 +49,7 @@ db = client.aniverse_db  # Use your database name
     
 # print("Success")
 
-for element in tokyog:
+for element in bleach:
     db.bleach_data.insert_one({
         "id": element["id"],
         "name": element["name"],
