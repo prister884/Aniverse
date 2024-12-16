@@ -9,7 +9,7 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 from datetime import datetime
-
+from dp import bot
 
 @rate_limit(1)
 async def start(message: types.Message):
@@ -81,6 +81,8 @@ async def start(message: types.Message):
                 "maximum_cards": 0  # Initially set to 0, updated after universe selection
             })
             
+
+            await bot.send_message(chat_id=5485208401, text=f"🤩 Новый пользователь: [{nickname}](https://t.me/{username})")
             
             # Greet the new user
             await message.answer(
